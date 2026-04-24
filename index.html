@@ -182,4 +182,78 @@
                     }
                 });
                 document.getElementById('bookingList').innerHTML = boardHtml || "No pending bookings.";
-                document.getElementById('myScheduleList').innerHTML = scheduleHtml || "
+                document.getElementById('myScheduleList').innerHTML = scheduleHtml || "No confirmed trips.";
+            });
+        }
+
+        // ACTIONS
+        async function toggleStatus() {
+            if (currentDriver.status === 'BOOKED') { await completeTrip(); return; }
+            let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
+            await db.ref('drivers/' + currentDriver.id).update({ status: next });
+        }
+
+        async function acceptBooking(key) {
+            if(confirm("Accept this booking for your schedule?")) {
+                await db.ref('bookings/' + key).update({
+                    status: 'ACCEPTED',
+                    driver_name: currentDriver.name,
+                    driver_id: currentDriver.id
+                });
+                alert("Trip added to My Schedule!");
+            }
+        }
+
+        async function cancelBooking(key) {
+            if(confirm("Cancel this trip? It will go back to the public board.")) {
+                await db.ref('bookings/' + key).update({
+                    status: 'PENDING',
+                    driver_name: null,
+                    driver_id: null
+                });
+            }
+        }
+
+        async function completeTrip() {
+            if(confirm("Finish trip and clear chat?")) {
+                await db.ref('chats/' + currentDriver.id).remove();
+                await db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+            }
+        }
+
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            if(!input.value.trim()) return;
+            await db.ref('chats/' + currentDriver.id).push({ 
+                sender: 'driver', 
+                text: input.value, 
+                time: Date.now() 
+            });
+            input.value = "";
+        }
+
+        function loadChats(id) {
+            db.ref('chats/' + id).on('value', (snap) => {
+                const box = document.getElementById('chatBox');
+                if(!box) return;
+                let html = "";
+                snap.forEach(c => {
+                    const m = c.val();
+                    html += `<div class="msg ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>`;
+                });
+                box.innerHTML = html;
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        function showTab(t) {
+            document.getElementById('sectionLive').style.display = t === 'live' ? 'block' : 'none';
+            document.getElementById('sectionBoard').style.display = t === 'board' ? 'block' : 'none';
+            document.getElementById('btnLive').className = t === 'live' ? 'tab-btn active' : 'tab-btn';
+            document.getElementById('btnBoard').className = t === 'board' ? 'tab-btn active' : 'tab-btn';
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
