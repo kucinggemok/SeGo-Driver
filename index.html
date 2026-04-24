@@ -7,13 +7,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --green: #22c55e; --red: #ef4444; --amber: #f59e0b; }
+        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --green: #22c55e; --red: #ef4444; --amber: #f59e0b; --slate: #94a3b8; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; justify-content: center; margin: 0; }
         .container { width: 100%; max-width: 400px; margin-top: 20px; }
         .card { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn:active { transform: scale(0.98); }
+        
         #statusBadge { padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; text-transform: uppercase; }
         .status-ON { background: var(--green); color: white; }
         .status-OFF { background: var(--red); color: white; }
@@ -24,10 +25,12 @@
         .me { align-self: flex-end; background: var(--blue); }
         .them { align-self: flex-start; background: #334155; }
 
-        /* Styles for Booking Board */
-        .tab-btn { flex: 1; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; cursor: pointer; border-radius: 10px; }
-        .tab-btn.active { background: var(--blue); border-color: var(--blue); }
+        .tab-bar { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 10px; background: #1e293b; border: 1px solid #334155; color: white; cursor: pointer; border-radius: 10px; font-size: 0.8rem; }
+        .tab-btn.active { background: var(--blue); border-color: var(--blue); font-weight: bold; }
+        
         .booking-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--amber); }
+        .schedule-card { background: rgba(34, 197, 94, 0.1); padding: 15px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--green); border-bottom: 1px solid rgba(34, 197, 94, 0.2); }
     </style>
 </head>
 <body>
@@ -42,32 +45,37 @@
         <div id="dashArea" style="display:none;">
             <div class="card">
                 <div id="statusBadge">OFFLINE</div>
-                <h1 id="dispName" style="margin:0;">-</h1>
-                <p id="dispCar" style="color:#94a3b8; margin-bottom:20px;">-</p>
+                <h1 id="dispName" style="margin:0; font-size: 1.5rem;">-</h1>
+                <p id="dispCar" style="color:var(--slate); margin-bottom:20px;">-</p>
 
-                <div style="display:flex; gap:5px; margin-bottom:15px;">
+                <div class="tab-bar">
                     <button class="tab-btn active" id="btnLive" onclick="showTab('live')">Live Shift</button>
                     <button class="tab-btn" id="btnBoard" onclick="showTab('board')">Booking Board</button>
                 </div>
 
                 <div id="sectionLive">
                     <div id="chatSection" style="display:none; border-top: 1px solid #334155; padding-top: 15px;">
-                        <label style="color:var(--amber); font-weight:bold; font-size:0.8rem;">CHAT WITH STUDENT:</label>
+                        <label style="color:var(--amber); font-weight:bold; font-size:0.75rem;">CHAT WITH STUDENT:</label>
                         <div id="chatBox"></div>
                         <div style="display:flex; gap:5px;">
                             <input type="text" id="chatInput" placeholder="Type message...">
                             <button onclick="sendChat()" style="background:var(--blue); color:white; border:none; padding:0 15px; border-radius:8px;">Send</button>
                         </div>
                     </div>
-                    <button class="btn" id="mainBtn" onclick="toggleStatus()" style="margin-top: 20px;">GO ONLINE</button>
+                    <button class="btn" id="mainBtn" onclick="toggleStatus()">GO ONLINE</button>
                 </div>
 
                 <div id="sectionBoard" style="display:none;">
-                    <h4 style="margin-bottom:5px;">Available Bookings</h4>
-                    <div id="bookingList" style="font-size:0.9rem; color:#94a3b8;">Searching...</div>
+                    <h4 style="margin-bottom:5px; color:var(--green);">✅ My Schedule</h4>
+                    <div id="myScheduleList" style="font-size:0.9rem;">No confirmed trips.</div>
+                    
+                    <hr style="border:0; border-top:1px solid #334155; margin:20px 0;">
+                    
+                    <h4 style="margin-bottom:5px; color:var(--amber);">🔔 Available Jobs</h4>
+                    <div id="bookingList" style="font-size:0.85rem;">Searching...</div>
                 </div>
 
-                <button onclick="logout()" style="background:none; border:none; color:var(--red); width:100%; margin-top:20px; cursor:pointer; text-decoration:underline;">Logout</button>
+                <button onclick="logout()" style="background:none; border:none; color:var(--red); width:100%; margin-top:25px; cursor:pointer; text-decoration:underline; font-size: 0.8rem;">Logout</button>
             </div>
         </div>
     </div>
@@ -80,11 +88,15 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        
         let currentDriver = JSON.parse(localStorage.getItem('drv_active'));
 
+        // LOGIN LOGIC
         async function login() {
             const user = document.getElementById('uName').value.trim();
             const pass = document.getElementById('uPass').value.trim();
+            if(!user || !pass) return alert("Fill all fields");
+
             const snap = await db.ref('drivers').get();
             const all = snap.val();
             let found = null;
@@ -93,20 +105,27 @@
                     found = {...all[id], id: id}; break; 
                 }
             }
-            if(found) { localStorage.setItem('drv_active', JSON.stringify(found)); location.reload(); }
-            else { alert("Invalid Credentials!"); }
+            if(found) { 
+                localStorage.setItem('drv_active', JSON.stringify(found)); 
+                location.reload(); 
+            } else { 
+                alert("Invalid Credentials!"); 
+            }
         }
 
+        // INIT DASHBOARD
         if(currentDriver) {
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('dashArea').style.display = 'block';
             
+            // Sync Driver Profile & Status
             db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
                 const d = snap.val();
                 if(!d) return;
                 currentDriver = {...d, id: currentDriver.id};
                 document.getElementById('dispName').innerText = d.name;
                 document.getElementById('dispCar').innerText = d.car + " [" + d.plate + "]";
+                
                 const badge = document.getElementById('statusBadge');
                 badge.innerText = d.status;
                 badge.className = "status-" + d.status;
@@ -128,80 +147,39 @@
                 }
             });
 
-            // Listen to Booking Board
+            // Sync Bookings (Board & My Schedule)
             db.ref('bookings').on('value', (snap) => {
-                let html = "";
+                let boardHtml = "";
+                let scheduleHtml = "";
+                
                 snap.forEach(child => {
                     const b = child.val();
+                    const key = child.key;
+
+                    // 1. Logic for Available Board
                     if(b.status === "PENDING") {
-                        html += `
+                        boardHtml += `
                         <div class="booking-card">
                             <b>${b.student_name}</b><br>
                             📅 ${b.date} | ⏰ ${b.time}<br>
                             📍 To: ${b.dest}<br>
-                            <button onclick="acceptBooking('${child.key}')" style="margin-top:10px; width:100%; padding:8px; background:var(--amber); border:none; border-radius:5px; font-weight:bold; cursor:pointer;">ACCEPT JOB</button>
+                            <button onclick="acceptBooking('${key}')" style="margin-top:10px; width:100%; padding:8px; background:var(--amber); border:none; border-radius:5px; font-weight:bold; cursor:pointer;">ACCEPT JOB</button>
+                        </div>`;
+                    }
+                    
+                    // 2. Logic for My Schedule
+                    if(b.status === "ACCEPTED" && b.driver_id === currentDriver.id) {
+                        scheduleHtml += `
+                        <div class="schedule-card">
+                            <div style="display:flex; justify-content:space-between;">
+                                <b>👤 ${b.student_name}</b>
+                                <span style="color:var(--green); font-size:0.7rem; font-weight:bold;">CONFIRMED</span>
+                            </div>
+                            📅 ${b.date} | ⏰ ${b.time}<br>
+                            📍 To: ${b.dest}<br>
+                            <button onclick="cancelBooking('${key}')" style="margin-top:10px; width:100%; padding:6px; background:rgba(239, 68, 68, 0.2); color:var(--red); border:1px solid var(--red); border-radius:5px; font-size:0.75rem; cursor:pointer;">CANCEL TRIP</button>
                         </div>`;
                     }
                 });
-                document.getElementById('bookingList').innerHTML = html || "No pending bookings.";
-            });
-        }
-
-        async function toggleStatus() {
-            if (currentDriver.status === 'BOOKED') { await completeTrip(); return; }
-            let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
-            await db.ref('drivers/' + currentDriver.id).update({ status: next });
-        }
-
-        async function acceptBooking(key) {
-            if(confirm("Accept this scheduled booking?")) {
-                await db.ref('bookings/' + key).update({
-                    status: 'ACCEPTED',
-                    driver_name: currentDriver.name,
-                    driver_id: currentDriver.id
-                });
-                alert("Booking Accepted!");
-            }
-        }
-
-        async function completeTrip() {
-            if(confirm("Finish trip and clear chat?")) {
-                await db.ref('chats/' + currentDriver.id).remove();
-                await db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
-                alert("Trip Completed!");
-            }
-        }
-
-        async function sendChat() {
-            const input = document.getElementById('chatInput');
-            if(!input.value.trim()) return;
-            await db.ref('chats/' + currentDriver.id).push({ sender: 'driver', text: input.value, time: Date.now() });
-            input.value = "";
-        }
-
-        function loadChats(id) {
-            db.ref('chats/' + id).on('value', (snap) => {
-                const box = document.getElementById('chatBox');
-                if(!box) return;
-                let html = "";
-                snap.forEach(c => {
-                    const m = c.val();
-                    // FIXED: Added backticks for template literal
-                    html += `<div class="msg ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>`;
-                });
-                box.innerHTML = html;
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        function showTab(t) {
-            document.getElementById('sectionLive').style.display = t === 'live' ? 'block' : 'none';
-            document.getElementById('sectionBoard').style.display = t === 'board' ? 'block' : 'none';
-            document.getElementById('btnLive').classList.toggle('active', t === 'live');
-            document.getElementById('btnBoard').classList.toggle('active', t === 'board');
-        }
-
-        function logout() { localStorage.clear(); location.reload(); }
-    </script>
-</body>
-</html>
+                document.getElementById('bookingList').innerHTML = boardHtml || "No pending bookings.";
+                document.getElementById('myScheduleList').innerHTML = scheduleHtml || "
