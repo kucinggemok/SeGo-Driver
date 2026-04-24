@@ -7,76 +7,162 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --amber: #fbbc04; }
-        body { font-family: sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --amber: #fbbc04; --slate: #94a3b8; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; }
         .container { width: 100%; max-width: 450px; }
         .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
+        .input-field { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         .btn { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
         .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
-        .tab { flex: 1; padding: 10px; text-align: center; background: #1e293b; border-radius: 10px; cursor: pointer; border: 1px solid #334155; }
-        .tab.active { background: var(--blue); }
+        .tab { flex: 1; padding: 12px; text-align: center; background: #1e293b; border-radius: 10px; cursor: pointer; border: 1px solid #334155; }
+        .tab.active { background: var(--blue); font-weight: bold; }
+        #loginArea { text-align: center; margin-top: 50px; width: 100%; }
     </style>
 </head>
 <body>
+
     <div class="container">
-        <h2>Driver Dashboard</h2>
-        <div class="tab-bar">
-            <div class="tab active" id="t1" onclick="switchTab('live')">Live Request</div>
-            <div class="tab" id="t2" onclick="switchTab('board')">Booking Board</div>
-        </div>
-        <div id="live">
+        <div id="loginArea">
+            <h1>🚗 SeGo Driver</h1>
+            <p style="color: var(--slate)">Enter your Driver ID to start shift</p>
             <div class="card">
-                <h3>My Status</h3>
-                <button id="statusBtn" class="btn" onclick="toggleStatus()">GO ONLINE</button>
+                <input type="text" id="driverIDInput" class="input-field" placeholder="Driver ID (e.g. shauqi)">
+                <button class="btn" onclick="loginDriver()">Login Dashboard</button>
             </div>
         </div>
-        <div id="board" style="display:none">
-            <h3>Student Bookings</h3>
-            <div id="bookingList"></div>
+
+        <div id="driverDashboard" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <span>Driver: <b id="displayDriverID"></b></span>
+                <button onclick="logoutDriver()" style="background:none; border:none; color:var(--slate); cursor:pointer">Logout</button>
+            </div>
+
+            <div class="tab-bar">
+                <div class="tab active" id="t1" onclick="switchTab('live')">Live Request</div>
+                <div class="tab" id="t2" onclick="switchTab('board')">Booking Board</div>
+            </div>
+
+            <div id="liveSection">
+                <div class="card">
+                    <h3>Status Shift</h3>
+                    <p id="statusTxt" style="color:var(--slate)">Loading...</p>
+                    <button id="statusBtn" class="btn" onclick="toggleStatus()">TOGGLE STATUS</button>
+                </div>
+                <div id="activeJobNotice"></div>
+            </div>
+
+            <div id="boardSection" style="display:none">
+                <h3>Student Pre-Orders</h3>
+                <div id="bookingList">Searching...</div>
+            </div>
         </div>
     </div>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg",
+            authDomain: "carpool-uitm.firebaseapp.com",
             databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "carpool-uitm"
+            projectId: "carpool-uitm",
+            storageBucket: "carpool-uitm.firebasestorage.app",
+            messagingSenderId: "571429884753",
+            appId: "1:571429884753:web:a02c09a1818a09b77b3970"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const MY_ID = "shauqi"; // Make sure this matches your Firebase key!
+
+        let currentDriverID = localStorage.getItem('sego_driver_id');
+
+        // CHECK SESSION ON LOAD
+        if (currentDriverID) {
+            showDashboard();
+        }
+
+        function loginDriver() {
+            const id = document.getElementById('driverIDInput').value.trim();
+            if (!id) return alert("Please enter ID!");
+            
+            // Check if driver exists in Firebase first
+            db.ref('drivers/' + id).once('value').then(snap => {
+                if (snap.exists()) {
+                    localStorage.setItem('sego_driver_id', id);
+                    currentDriverID = id;
+                    showDashboard();
+                } else {
+                    alert("Driver ID not found in database! Create one in Firebase first.");
+                }
+            });
+        }
+
+        function logoutDriver() {
+            localStorage.removeItem('sego_driver_id');
+            location.reload();
+        }
+
+        function showDashboard() {
+            document.getElementById('loginArea').style.display = 'none';
+            document.getElementById('driverDashboard').style.display = 'block';
+            document.getElementById('displayDriverID').innerText = currentDriverID;
+            initDriverLogic();
+        }
 
         function switchTab(t) {
-            document.getElementById('live').style.display = t==='live'?'block':'none';
-            document.getElementById('board').style.display = t==='board'?'block':'none';
+            document.getElementById('liveSection').style.display = t==='live'?'block':'none';
+            document.getElementById('boardSection').style.display = t==='board'?'block':'none';
             document.getElementById('t1').className = t==='live'?'tab active':'tab';
             document.getElementById('t2').className = t==='board'?'tab active':'tab';
         }
 
-        db.ref('drivers/'+MY_ID).on('value', s => {
-            const d = s.val();
-            const b = document.getElementById('statusBtn');
-            if(d.status === "ON") { b.innerText = "GO OFFLINE"; b.style.background = "#ef4444"; }
-            else { b.innerText = "GO ONLINE"; b.style.background = "#22c55e"; }
-        });
-
-        async function toggleStatus() {
-            const s = await db.ref('drivers/'+MY_ID+'/status').once('value');
-            await db.ref('drivers/'+MY_ID).update({status: s.val()==="ON"?"OFF":"ON"});
-        }
-
-        db.ref('bookings').on('value', snap => {
-            let h = "";
-            snap.forEach(c => {
-                const b = c.val();
-                if(b.status === "PENDING") {
-                    h += `<div class="card"><b>${b.student_name}</b><br>${b.date} @ ${b.time}<br><button class="btn" style="background:var(--amber);color:black" onclick="accept('${c.key}')">ACCEPT</button></div>`;
+        function initDriverLogic() {
+            // Monitor Online/Offline Status
+            db.ref('drivers/' + currentDriverID).on('value', s => {
+                const d = s.val();
+                if (!d) return;
+                const b = document.getElementById('statusBtn');
+                const t = document.getElementById('statusTxt');
+                t.innerText = "Current: " + d.status;
+                
+                if(d.status === "ON") { 
+                    b.innerText = "GO OFFLINE"; 
+                    b.style.background = "#ef4444"; 
+                } else { 
+                    b.innerText = "GO ONLINE"; 
+                    b.style.background = "#22c55e"; 
                 }
             });
-            document.getElementById('bookingList').innerHTML = h || "No requests.";
-        });
 
-        async function accept(key) { await db.ref('bookings/'+key).update({status:'ACCEPTED', driver_name:MY_ID}); alert("Accepted!"); }
+            // Monitor Booking Board
+            db.ref('bookings').on('value', snap => {
+                let h = "";
+                snap.forEach(c => {
+                    const b = c.val();
+                    if(b.status === "PENDING") {
+                        h += `<div class="card">
+                            <b>${b.student_name}</b><br>
+                            ${b.date} @ ${b.time}<br>
+                            To: ${b.dest}<br><br>
+                            <button class="btn" style="background:var(--amber);color:black" onclick="acceptBooking('${c.key}')">ACCEPT</button>
+                        </div>`;
+                    }
+                });
+                document.getElementById('bookingList').innerHTML = h || "No requests.";
+            });
+        }
+
+        async function toggleStatus() {
+            const s = await db.ref('drivers/' + currentDriverID + '/status').once('value');
+            await db.ref('drivers/' + currentDriverID).update({ status: s.val()==="ON"?"OFF":"ON" });
+        }
+
+        async function acceptBooking(key) {
+            if(confirm("Confirm accept this booking?")) {
+                await db.ref('bookings/' + key).update({
+                    status: 'ACCEPTED',
+                    driver_name: currentDriverID // Automatically uses logged-in ID
+                });
+                alert("Booking Accepted!");
+            }
+        }
     </script>
 </body>
 </html>
