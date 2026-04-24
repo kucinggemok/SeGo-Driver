@@ -197,4 +197,11 @@
         function showTab(t) {
             document.getElementById('sectionLive').style.display = t === 'live' ? 'block' : 'none';
             document.getElementById('sectionBoard').style.display = t === 'board' ? 'block' : 'none';
-            document.getElementById('btnLive').classList.toggle('active', t
+            document.getElementById('btnLive').classList.toggle('active', t === 'live');
+            document.getElementById('btnBoard').classList.toggle('active', t === 'board');
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
+    </script>
+</body>
+</html>
