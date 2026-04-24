@@ -3,166 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SeGo | Driver Portal</title>
+    <title>Driver Dashboard | SeGo Driver</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --amber: #fbbc04; --slate: #94a3b8; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; margin: 0; }
-        .container { width: 100%; max-width: 450px; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
-        .input-field { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
-        .tab { flex: 1; padding: 12px; text-align: center; background: #1e293b; border-radius: 10px; cursor: pointer; border: 1px solid #334155; }
-        .tab.active { background: var(--blue); font-weight: bold; }
-        #loginArea { text-align: center; margin-top: 50px; width: 100%; }
+        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --green: #22c55e; --red: #ef4444; --amber: #f59e0b; }
+        body { font-family: sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; justify-content: center; margin: 0; }
+        .container { width: 100%; max-width: 400px; margin-top: 20px; }
+        .card { background: var(--card); padding: 25px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #statusBadge { padding: 8px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; }
+        .status-ON { background: var(--green); color: white; }
+        .status-OFF { background: var(--red); color: white; }
+        .status-BOOKED { background: var(--amber); color: black; }
+        
+        #chatBox { background: #0f172a; height: 160px; overflow-y: auto; padding: 10px; border-radius: 10px; margin: 15px 0; border: 1px solid #334155; display: flex; flex-direction: column; gap: 5px; }
+        .msg { padding: 8px; border-radius: 8px; max-width: 80%; font-size: 0.85rem; }
+        .me { align-self: flex-end; background: var(--blue); }
+        .them { align-self: flex-start; background: #334155; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <div id="loginArea">
-            <h1>🚗 SeGo Driver</h1>
-            <p style="color: var(--slate)">Enter your Driver ID to start shift</p>
-            <div class="card">
-                <input type="text" id="driverIDInput" class="input-field" placeholder="Driver ID (e.g. shauqi)">
-                <button class="btn" onclick="loginDriver()">Login Dashboard</button>
-            </div>
+        <div id="loginArea" class="card">
+            <h2>Driver Login</h2>
+            <input type="text" id="uName" placeholder="Username">
+            <input type="password" id="uPass" placeholder="Password">
+            <button class="btn" style="background: var(--blue); color:white;" onclick="login()">Login</button>
         </div>
 
-        <div id="driverDashboard" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <span>Driver: <b id="displayDriverID"></b></span>
-                <button onclick="logoutDriver()" style="background:none; border:none; color:var(--slate); cursor:pointer">Logout</button>
-            </div>
+        <div id="dashArea" class="card" style="display:none;">
+            <div id="statusBadge">OFFLINE</div>
+            <h1 id="dispName" style="margin:0;">-</h1>
+            <p id="dispCar" style="color:#94a3b8; margin-bottom:20px;">-</p>
 
-            <div class="tab-bar">
-                <div class="tab active" id="t1" onclick="switchTab('live')">Live Request</div>
-                <div class="tab" id="t2" onclick="switchTab('board')">Booking Board</div>
-            </div>
-
-            <div id="liveSection">
-                <div class="card">
-                    <h3>Status Shift</h3>
-                    <p id="statusTxt" style="color:var(--slate)">Loading...</p>
-                    <button id="statusBtn" class="btn" onclick="toggleStatus()">TOGGLE STATUS</button>
+            <div id="chatSection" style="display:none; border-top: 1px solid #334155; padding-top: 15px;">
+                <label style="color:var(--amber); font-weight:bold; font-size:0.8rem;">LIVE CHAT WITH STUDENT:</label>
+                <div id="chatBox"></div>
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="chatInput" placeholder="Type a message...">
+                    <button onclick="sendChat()" style="background:var(--blue); color:white; border:none; padding:0 15px; border-radius:8px;">Send</button>
                 </div>
-                <div id="activeJobNotice"></div>
             </div>
 
-            <div id="boardSection" style="display:none">
-                <h3>Student Pre-Orders</h3>
-                <div id="bookingList">Searching...</div>
-            </div>
+            <button class="btn" id="mainBtn" onclick="toggleStatus()" style="margin-top: 20px;">GO ONLINE</button>
+            <button onclick="logout()" style="background:none; border:none; color:var(--red); width:100%; margin-top:20px; cursor:pointer; text-decoration:underline;">Logout</button>
         </div>
     </div>
 
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg",
-            authDomain: "carpool-uitm.firebaseapp.com",
             databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "carpool-uitm",
-            storageBucket: "carpool-uitm.firebasestorage.app",
-            messagingSenderId: "571429884753",
-            appId: "1:571429884753:web:a02c09a1818a09b77b3970"
+            projectId: "carpool-uitm"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        let currentDriverID = localStorage.getItem('sego_driver_id');
-
-        // CHECK SESSION ON LOAD
-        if (currentDriverID) {
-            showDashboard();
-        }
-
-        function loginDriver() {
-            const id = document.getElementById('driverIDInput').value.trim();
-            if (!id) return alert("Please enter ID!");
-            
-            // Check if driver exists in Firebase first
-            db.ref('drivers/' + id).once('value').then(snap => {
-                if (snap.exists()) {
-                    localStorage.setItem('sego_driver_id', id);
-                    currentDriverID = id;
-                    showDashboard();
-                } else {
-                    alert("Driver ID not found in database! Create one in Firebase first.");
+        let currentDriver = JSON.parse(localStorage.getItem('drv_active'));
+        async function login() {
+            const user = document.getElementById('uName').value.trim();
+            const pass = document.getElementById('uPass').value.trim();
+            const snap = await db.ref('drivers').get();
+            const all = snap.val();
+            let found = null;
+            for(let id in all) {
+                if(String(all[id].username) === user && String(all[id].password) === pass) {
+                    found = all[id]; break;
                 }
-            });
+            }
+            if(found) { localStorage.setItem('drv_active', JSON.stringify(found)); location.reload(); }
+            else { alert("Invalid Credentials!"); }
         }
 
-        function logoutDriver() {
-            localStorage.removeItem('sego_driver_id');
-            location.reload();
-        }
-
-        function showDashboard() {
+        if(currentDriver) {
             document.getElementById('loginArea').style.display = 'none';
-            document.getElementById('driverDashboard').style.display = 'block';
-            document.getElementById('displayDriverID').innerText = currentDriverID;
-            initDriverLogic();
-        }
-
-        function switchTab(t) {
-            document.getElementById('liveSection').style.display = t==='live'?'block':'none';
-            document.getElementById('boardSection').style.display = t==='board'?'block':'none';
-            document.getElementById('t1').className = t==='live'?'tab active':'tab';
-            document.getElementById('t2').className = t==='board'?'tab active':'tab';
-        }
-
-        function initDriverLogic() {
-            // Monitor Online/Offline Status
-            db.ref('drivers/' + currentDriverID).on('value', s => {
-                const d = s.val();
-                if (!d) return;
-                const b = document.getElementById('statusBtn');
-                const t = document.getElementById('statusTxt');
-                t.innerText = "Current: " + d.status;
+            document.getElementById('dashArea').style.display = 'block';
+            
+            db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
+                const d = snap.val();
+                if(!d) return;
+                currentDriver = d;
+                document.getElementById('dispName').innerText = d.name;
+                document.getElementById('dispCar').innerText = d.car + " [" + d.plate + "]";
+                const badge = document.getElementById('statusBadge');
+                badge.innerText = d.status;
+                badge.className = "status-" + d.status;
                 
-                if(d.status === "ON") { 
-                    b.innerText = "GO OFFLINE"; 
-                    b.style.background = "#ef4444"; 
-                } else { 
-                    b.innerText = "GO ONLINE"; 
-                    b.style.background = "#22c55e"; 
+                const btn = document.getElementById('mainBtn');
+                const chatArea = document.getElementById('chatSection');
+                
+                if(d.status === 'BOOKED') {
+                    btn.innerText = "COMPLETE TRIP (CLEAR CHAT)";
+                    btn.style.background = "var(--green)";
+                    btn.style.color = "white";
+                    chatArea.style.display = 'block';
+                    loadChats(d.id);
+                } else {
+                    btn.innerText = d.status === 'ON' ? "GO OFFLINE" : "GO ONLINE";
+                    btn.style.background = d.status === 'ON' ? "var(--red)" : "white";
+                    btn.style.color = d.status === 'ON' ? "white" : "black";
+                    chatArea.style.display = 'none';
                 }
-            });
-
-            // Monitor Booking Board
-            db.ref('bookings').on('value', snap => {
-                let h = "";
-                snap.forEach(c => {
-                    const b = c.val();
-                    if(b.status === "PENDING") {
-                        h += `<div class="card">
-                            <b>${b.student_name}</b><br>
-                            ${b.date} @ ${b.time}<br>
-                            To: ${b.dest}<br><br>
-                            <button class="btn" style="background:var(--amber);color:black" onclick="acceptBooking('${c.key}')">ACCEPT</button>
-                        </div>`;
-                    }
-                });
-                document.getElementById('bookingList').innerHTML = h || "No requests.";
             });
         }
 
         async function toggleStatus() {
-            const s = await db.ref('drivers/' + currentDriverID + '/status').once('value');
-            await db.ref('drivers/' + currentDriverID).update({ status: s.val()==="ON"?"OFF":"ON" });
+            if (currentDriver.status === 'BOOKED') {
+                await completeTrip();
+                return;
+            }
+            let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
+            await db.ref('drivers/' + currentDriver.id).update({ status: next });
         }
 
-        async function acceptBooking(key) {
-            if(confirm("Confirm accept this booking?")) {
-                await db.ref('bookings/' + key).update({
-                    status: 'ACCEPTED',
-                    driver_name: currentDriverID // Automatically uses logged-in ID
-                });
-                alert("Booking Accepted!");
+        async function completeTrip() {
+            if(confirm("Finish trip and clear chat?")) {
+                await db.ref('chats/' + currentDriver.id).remove();
+                await db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+                alert("Trip Completed!");
             }
         }
+
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            if(!input.value.trim()) return;
+            await db.ref('chats/' + currentDriver.id).push({ sender: 'driver', text: input.value, time: Date.now() });
+            input.value = "";
+        }
+
+        function loadChats(id) {
+            db.ref('chats/' + id).on('value', (snap) => {
+                const box = document.getElementById('chatBox');
+                if(!box) return;
+                let html = "";
+                snap.forEach(c => {
+                    const m = c.val();
+                    html += <div class="msg ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>;
+                });
+                box.innerHTML = html;
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        function logout() { localStorage.clear(); location.reload(); }
     </script>
 </body>
 </html>
