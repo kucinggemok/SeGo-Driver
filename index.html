@@ -1,57 +1,99 @@
-<div class="container">
-    <h2>Driver Dashboard</h2>
-    <div class="tab-bar">
-        <div class="tab active" id="tabLive" onclick="switchDriverTab('live')">Live Jobs</div>
-        <div class="tab" id="tabBoard" onclick="switchDriverTab('board')">Booking Board</div>
-    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeGo | Driver Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --amber: #fbbc04; --slate: #94a3b8; }
+        body { font-family: sans-serif; background: var(--bg); color: white; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 450px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
+        .btn { width: 100%; padding: 12px; background: var(--blue); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .tab-bar { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; }
+        .tab { flex: 1; padding: 10px; text-align: center; background: #1e293b; border-radius: 10px; cursor: pointer; border: 1px solid #334155; }
+        .tab.active { background: var(--blue); border-color: var(--blue); }
+    </style>
+</head>
+<body>
 
-    <div id="liveSection">
+    <div class="container">
+        <h1>Driver Dashboard</h1>
+        
+        <div class="tab-bar">
+            <div class="tab active" id="t1" onclick="switchTab('live')">Live Requests</div>
+            <div class="tab" id="t2" onclick="switchTab('board')">Booking Board</div>
         </div>
 
-    <div id="boardSection" style="display:none;">
-        <h4>Available Bookings</h4>
-        <div id="availableBookings"></div>
+        <div id="liveSection">
+            <div class="card">
+                <h3>My Status</h3>
+                <button id="statusBtn" class="btn" style="background:#ef4444" onclick="toggleStatus()">GO ONLINE</button>
+            </div>
+            <div id="activeJob"></div>
+        </div>
+
+        <div id="boardSection" style="display:none;">
+            <h3>Available Bookings</h3>
+            <div id="bookingBoard"></div>
+        </div>
     </div>
-</div>
 
-<script>
-    // ... Firebase Init ...
+    <script>
+        // CONFIG
+        const firebaseConfig = { /* SAME AS STUDENT */ };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    function switchDriverTab(t) {
-        document.getElementById('liveSection').style.display = t === 'live' ? 'block' : 'none';
-        document.getElementById('boardSection').style.display = t === 'board' ? 'block' : 'none';
-    }
+        const DRIVER_ID = "D001"; // Hardcoded for Shauqi
+        const DRIVER_NAME = "shauqi";
 
-    // Load all PENDING bookings for all drivers to see
-    db.ref('bookings').on('value', (snap) => {
-        let html = "";
-        snap.forEach(child => {
-            const b = child.val();
-            const bId = child.key;
-            if(b.status === "PENDING") {
-                html += `
-                <div class="card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <b>${b.student_name}</b>
-                        <span style="color:var(--amber)">${b.date}</span>
-                    </div>
-                    <p style="font-size:0.9rem; color:var(--slate)">Time: ${b.time} | To: ${b.dest}</p>
-                    <button class="btn" onclick="acceptBooking('${bId}')">Accept Job</button>
-                </div>`;
-            }
-        });
-        document.getElementById('availableBookings').innerHTML = html || "No pending bookings.";
-    });
-
-    async function acceptBooking(id) {
-        if(confirm("Accept this booking?")) {
-            // Update the booking status and assign this driver (shauqi)
-            await db.ref('bookings/' + id).update({
-                status: "ACCEPTED",
-                driver_name: "shauqi", // Get this from driver login/profile
-                driver_id: "D001"
-            });
-            alert("Booking accepted! It will show in your schedule.");
+        function switchTab(t) {
+            document.getElementById('liveSection').style.display = t === 'live' ? 'block' : 'none';
+            document.getElementById('boardSection').style.display = t === 'board' ? 'block' : 'none';
+            document.getElementById('t1').className = t === 'live' ? 'tab active' : 'tab';
+            document.getElementById('t2').className = t === 'board' ? 'tab active' : 'tab';
         }
-    }
-</script>
+
+        // TOGGLE ONLINE/OFFLINE
+        async function toggleStatus() {
+            const s = document.getElementById('statusBtn');
+            const isOnline = s.innerText === "GO OFFLINE";
+            const newStatus = isOnline ? "OFF" : "ON";
+            await db.ref('drivers/' + DRIVER_ID).update({ status: newStatus });
+            s.innerText = isOnline ? "GO ONLINE" : "GO OFFLINE";
+            s.style.background = isOnline ? "#ef4444" : "#22c55e";
+        }
+
+        // LOAD BOOKING BOARD
+        db.ref('bookings').on('value', snap => {
+            let html = "";
+            snap.forEach(child => {
+                const b = child.val();
+                if(b.status === "PENDING") {
+                    html += `<div class="card">
+                        <b>${b.student_name}</b> asks for a ride<br>
+                        Date: ${b.date} | Time: ${b.time}<br>
+                        Destination: ${b.dest}<br><br>
+                        <button class="btn" style="background:var(--amber); color:black;" onclick="acceptJob('${child.key}')">ACCEPT THIS BOOKING</button>
+                    </div>`;
+                }
+            });
+            document.getElementById('bookingBoard').innerHTML = html || "No pending bookings found.";
+        });
+
+        async function acceptJob(key) {
+            if(confirm("Accept this scheduled booking?")) {
+                await db.ref('bookings/' + key).update({
+                    status: "ACCEPTED",
+                    driver_name: DRIVER_NAME,
+                    driver_id: DRIVER_ID
+                });
+                alert("Job added to your schedule!");
+            }
+        }
+    </script>
+</body>
+</html>
