@@ -247,7 +247,7 @@
             
             for(let id in all) {
                 if(String(all[id].username) === user && String(all[id].password) === pass) {
-                    found = {...all[id], id: id}; // Simpan ID unik Firebase
+                    found = {...all[id], id: id}; 
                     break; 
                 }
             }
@@ -265,11 +265,11 @@
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('dashArea').style.display = 'block';
             
-            // 1. Listen to Driver Info & Status
+            // 1. Listen to Driver Info & Status (This updates currentDriver in real-time)
             db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
                 const d = snap.val();
                 if(!d) return;
-                currentDriver = {...d, id: currentDriver.id};
+                currentDriver = {...d, id: currentDriver.id}; // Sync local variable with DB
                 
                 document.getElementById('dispName').innerText = d.name;
                 document.getElementById('dispCar').innerText = d.car + " • " + d.plate;
@@ -288,9 +288,12 @@
                     btn.style.background = d.status === 'ON' ? "var(--red)" : "white";
                     btn.style.color = d.status === 'ON' ? "white" : "var(--bg)";
                 }
+                
+                // Re-trigger request check whenever status changes
+                db.ref('open_requests').get().then(reqSnap => renderInstantRequests(reqSnap));
             });
 
-            // 2. Listen to Instant Requests (REAL-TIME POPUP)
+            // 2. Listen to Instant Requests (REAL-TIME UPDATE)
             db.ref('open_requests').on('value', (snap) => {
                 renderInstantRequests(snap);
             });
@@ -307,7 +310,7 @@
             
             snap.forEach(child => {
                 const req = child.val();
-                // Show order if Driver is ONLINE and status is SEARCHING
+                // Logic updated: Check currentDriver.status directly
                 if(req.status === 'SEARCHING' && currentDriver.status === 'ON') {
                     instantHtml += `
                     <div class="instant-card">
@@ -317,7 +320,6 @@
                         <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem; margin:0;">Accept Request</button>
                     </div>`;
                 }
-                // Check if driver has an active trip
                 if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED')) {
                     myTripFound = true;
                     activeInstantId = child.key;
@@ -338,7 +340,6 @@
                 document.getElementById('activeRideSection').style.display = 'none';
                 document.getElementById('instantRequestsArea').style.display = 'block';
                 activeInstantId = null;
-                // If stuck in BUSY but no trip found, reset to ON
                 if(currentDriver.status === 'BUSY') {
                     db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
                 }
@@ -383,7 +384,6 @@
         }
 
         async function acceptInstant(id) {
-            // Re-check status to prevent double-accept
             const check = await db.ref('open_requests/' + id).get();
             if(check.val().status !== 'SEARCHING') return alert("Already taken!");
 
@@ -422,7 +422,7 @@
         }
 
         function loadChats(id, elementId) {
-            db.ref('chats/' + id).off(); // clear old listeners
+            db.ref('chats/' + id).off(); 
             db.ref('chats/' + id).on('value', (snap) => {
                 const box = document.getElementById(elementId);
                 let html = "";
