@@ -104,7 +104,7 @@
         
         let currentDriver = JSON.parse(localStorage.getItem('drv_active'));
         let activeInstantId = null; 
-        let activeBookingId = null; 
+        let activeBookingId = null;
 
         async function login() {
             const user = document.getElementById('uName').value.trim();
@@ -126,10 +126,12 @@
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('dashArea').style.display = 'block';
             
+            // 1. Monitor Driver Personal Info & Status
             db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
                 const d = snap.val();
                 if(!d) return;
-                currentDriver = {...d, id: currentDriver.id};
+                currentDriver = {...d, id: currentDriver.id}; // Sync status ke global variable
+                
                 document.getElementById('dispName').innerText = d.name;
                 document.getElementById('dispCar').innerText = d.car + " [" + d.plate + "]";
                 
@@ -149,41 +151,12 @@
                 }
             });
 
-            // FIXED: Real-time Listener with automatic filter for Online/Offline
+            // 2. Monitor Instant Requests (With Always-Live Logic)
             db.ref('open_requests').on('value', (snap) => {
-                let instantHtml = "";
-                let myTripFound = false;
-                const isOnline = (currentDriver.status === 'ON');
-                
-                snap.forEach(child => {
-                    const req = child.val();
-                    if(req.status === 'SEARCHING' && isOnline) {
-                        instantHtml += `
-                        <div class="booking-card" style="border-left-color: var(--blue);">
-                            <b>👤 ${req.student_name} (${req.pax} Pax)</b><br>
-                            📍 From: ${req.pickup}<br>
-                            🎯 To: ${req.destination}<br>
-                            <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem;">ACCEPT NOW</button>
-                        </div>`;
-                    }
-                    if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED' || req.status === 'COMPLETED')) {
-                        myTripFound = true;
-                        activeInstantId = child.key;
-                        showActiveRide(req);
-                    }
-                });
-
-                document.getElementById('instantList').innerHTML = isOnline ? (instantHtml || "Waiting for requests...") : "Go online to see requests.";
-                
-                if(!myTripFound && currentDriver.status === 'BUSY') {
-                    resetToMenu();
-                } else if (!myTripFound) {
-                    document.getElementById('activeRideSection').style.display = 'none';
-                    document.getElementById('instantRequestsArea').style.display = 'block';
-                    activeInstantId = null;
-                }
+                renderInstantRequests(snap);
             });
 
+            // 3. Monitor Pre-Bookings
             db.ref('bookings').on('value', (snap) => {
                 let boardHtml = ""; let scheduleHtml = "";
                 snap.forEach(child => {
@@ -204,17 +177,63 @@
             });
         }
 
-        function resetToMenu() {
-            db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
-            document.getElementById('activeRideSection').style.display = 'none';
-            document.getElementById('instantRequestsArea').style.display = 'block';
-            activeInstantId = null;
+        // Separate function for rendering to allow forced refresh
+        function renderInstantRequests(snap) {
+            let instantHtml = "";
+            let myTripFound = false;
+            
+            snap.forEach(child => {
+                const req = child.val();
+                // Check status ON directly from currentDriver variable
+                if(req.status === 'SEARCHING' && currentDriver.status === 'ON') {
+                    instantHtml += `
+                    <div class="booking-card" style="border-left-color: var(--blue);">
+                        <b>👤 ${req.student_name} (${req.pax} Pax)</b><br>
+                        📍 From: ${req.pickup}<br>
+                        🎯 To: ${req.destination}<br>
+                        <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem;">ACCEPT NOW</button>
+                    </div>`;
+                }
+                if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED' || req.status === 'COMPLETED')) {
+                    myTripFound = true;
+                    activeInstantId = child.key;
+                    showActiveRide(req);
+                }
+            });
+
+            document.getElementById('instantList').innerHTML = (currentDriver.status === 'ON') ? (instantHtml || "Waiting for requests...") : "Go online to see requests.";
+            
+            if(!myTripFound && currentDriver.status === 'BUSY') {
+                resetToMenu();
+            } else if (!myTripFound) {
+                document.getElementById('activeRideSection').style.display = 'none';
+                document.getElementById('instantRequestsArea').style.display = 'block';
+                activeInstantId = null;
+            }
         }
 
         async function toggleStatus() {
             if (currentDriver.status === 'BUSY') { completeTrip(); return; }
+            
             let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
+            
+            // Update Database
             await db.ref('drivers/' + currentDriver.id).update({ status: next });
+            
+            // CRITICAL: Update local status immediately so logic doesn't wait for Firebase sync
+            currentDriver.status = next;
+            
+            // FORCE RE-RENDER: Ambil data snapshot terbaru dan lukis terus
+            const snap = await db.ref('open_requests').get();
+            renderInstantRequests(snap);
+        }
+
+        function resetToMenu() {
+            db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+            currentDriver.status = 'ON';
+            document.getElementById('activeRideSection').style.display = 'none';
+            document.getElementById('instantRequestsArea').style.display = 'block';
+            activeInstantId = null;
         }
 
         async function acceptInstant(id) {
@@ -226,6 +245,7 @@
                 driver_plate: currentDriver.plate
             });
             await db.ref('drivers/' + currentDriver.id).update({ status: 'BUSY' });
+            currentDriver.status = 'BUSY';
         }
 
         function showActiveRide(data) {
@@ -245,7 +265,12 @@
             const input = document.getElementById(type === 'instant' ? 'chatInput' : 'bookChatInput');
             const targetId = type === 'instant' ? activeInstantId : activeBookingId;
             if(!input.value.trim() || !targetId) return;
-            await db.ref('chats/' + targetId).push({ sender: 'driver', text: input.value, time: Date.now() });
+            
+            await db.ref('chats/' + targetId).push({
+                sender: 'driver',
+                text: input.value,
+                time: Date.now()
+            });
             input.value = "";
         }
 
