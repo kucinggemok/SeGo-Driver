@@ -339,7 +339,6 @@
             
             snap.forEach(child => {
                 const req = child.val();
-                // Tukar status filter kepada 'SEARCHING' ikut Student App baru
                 if(req.status === 'SEARCHING' && currentDriver.status === 'ON') {
                     instantHtml += `
                     <div class="instant-card">
@@ -349,8 +348,7 @@
                         <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem; margin:0;">Accept Request</button>
                     </div>`;
                 }
-                // Hanya tunjuk Active Ride kalau status ACCEPTED
-                if(req.driver_id === currentDriver.id && req.status === 'ACCEPTED') {
+                if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED' || req.status === 'COMPLETED')) {
                     myTripFound = true;
                     activeInstantId = child.key;
                     showActiveRide(req);
@@ -359,15 +357,12 @@
 
             document.getElementById('instantList').innerHTML = (currentDriver.status === 'ON') ? (instantHtml || "Waiting for requests in your area...") : "System is offline. Go online to view requests.";
             
-            // Logic if trip removed or completed
-            if(!myTripFound) {
+            if(!myTripFound && currentDriver.status === 'BUSY') {
+                resetToMenu();
+            } else if (!myTripFound) {
                 document.getElementById('activeRideSection').style.display = 'none';
                 document.getElementById('instantRequestsArea').style.display = 'block';
                 activeInstantId = null;
-                // If trip was finished, set driver back to ON if they were BUSY
-                if(currentDriver.status === 'BUSY') {
-                    db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
-                }
             }
         }
 
@@ -375,7 +370,20 @@
             if (currentDriver.status === 'BUSY') { completeTrip(); return; }
             
             let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
+            
             await db.ref('drivers/' + currentDriver.id).update({ status: next });
+            currentDriver.status = next;
+            
+            const snap = await db.ref('open_requests').get();
+            renderInstantRequests(snap);
+        }
+
+        function resetToMenu() {
+            db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+            currentDriver.status = 'ON';
+            document.getElementById('activeRideSection').style.display = 'none';
+            document.getElementById('instantRequestsArea').style.display = 'block';
+            activeInstantId = null;
         }
 
         async function acceptInstant(id) {
@@ -387,6 +395,7 @@
                 driver_plate: currentDriver.plate
             });
             await db.ref('drivers/' + currentDriver.id).update({ status: 'BUSY' });
+            currentDriver.status = 'BUSY';
         }
 
         function showActiveRide(data) {
@@ -407,7 +416,6 @@
         async function completeTrip() {
             if(confirm("Confirm trip completion?")) {
                 await db.ref('open_requests/' + activeInstantId).update({ status: 'COMPLETED' });
-                // Note: Driver status will be updated to ON via the renderInstantRequests observer
             }
         }
 
@@ -425,8 +433,6 @@
         }
 
         function loadChats(id, elementId) {
-            // Bersihkan listener lama sebelum start baru
-            db.ref('chats/' + id).off();
             db.ref('chats/' + id).on('value', (snap) => {
                 const box = document.getElementById(elementId);
                 let html = "";
