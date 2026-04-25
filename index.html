@@ -123,33 +123,16 @@
         }
         .tab-btn.active { background: var(--blue); color: white; font-weight: 600; }
         
-        .booking-card { 
+        .booking-card, .schedule-card, .instant-card { 
             background: #0f172a; 
             padding: 16px; 
             border-radius: 8px; 
-            margin-top: 10px; 
             border: 1px solid var(--border);
-            border-left: 4px solid var(--amber); 
             margin-bottom: 12px; 
         }
-        .schedule-card { 
-            background: #0f172a; 
-            padding: 16px; 
-            border-radius: 8px; 
-            margin-top: 10px; 
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--green); 
-            margin-bottom: 12px; 
-        }
-        .instant-card {
-            background: #0f172a; 
-            padding: 16px; 
-            border-radius: 8px; 
-            margin-top: 10px; 
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--blue); 
-            margin-bottom: 12px; 
-        }
+        .booking-card { border-left: 4px solid var(--amber); }
+        .schedule-card { border-left: 4px solid var(--green); }
+        .instant-card { border-left: 4px solid var(--blue); }
         
         .section-title {
             margin: 25px 0 10px 0; 
@@ -176,7 +159,7 @@
     <div class="container">
         <div id="loginArea" class="card">
             <h2 style="text-align:center; margin-bottom: 25px;">Driver Portal</h2>
-            <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Driver ID</label>
+            <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Username</label>
             <input type="text" id="uName" placeholder="Enter Username">
             <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Password</label>
             <input type="password" id="uPass" placeholder="Enter Password">
@@ -199,10 +182,8 @@
                 </div>
 
                 <div id="sectionLive">
-                    
                     <div id="activeRideSection" style="display:none; border-top: 1px solid var(--border); padding-top: 15px;">
                         <div id="rideInfo" style="margin-bottom: 15px; background: #0f172a; border: 1px solid var(--border); padding: 15px; border-radius: 8px;"></div>
-                        
                         <label style="color:var(--slate); font-weight:600; font-size:0.8rem; text-transform: uppercase;">Passenger Chat</label>
                         <div id="chatBox"></div>
                         <div style="display:flex; gap:8px; margin-bottom: 15px;">
@@ -213,7 +194,7 @@
 
                     <div id="instantRequestsArea">
                         <div class="section-title">Nearby Requests</div>
-                        <div id="instantList" style="font-size:0.9rem; margin-bottom:20px; color: var(--slate);">System is offline.</div>
+                        <div id="instantList" style="font-size:0.9rem; margin-bottom:20px; color: var(--slate);">Loading...</div>
                     </div>
 
                     <button class="btn" id="mainBtn" onclick="toggleStatus()" style="margin-top: 10px;">GO ONLINE</button>
@@ -222,9 +203,7 @@
                 <div id="sectionBoard" style="display:none;">
                     <div class="section-title">Confirmed Schedule</div>
                     <div id="myScheduleList" style="font-size:0.9rem; color: var(--slate);">No confirmed trips.</div>
-                    
                     <hr style="border:0; border-top:1px solid var(--border); margin:25px 0;">
-                    
                     <div class="section-title">Available Bookings</div>
                     <div id="bookingList" style="font-size:0.9rem; color: var(--slate);">Searching for jobs...</div>
                 </div>
@@ -245,7 +224,11 @@
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg", databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "carpool-uitm" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg", 
+            databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app", 
+            projectId: "carpool-uitm" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
@@ -257,23 +240,32 @@
             const user = document.getElementById('uName').value.trim();
             const pass = document.getElementById('uPass').value.trim();
             if(!user || !pass) return alert("Please fill in all fields.");
+            
             const snap = await db.ref('drivers').get();
             const all = snap.val();
             let found = null;
+            
             for(let id in all) {
                 if(String(all[id].username) === user && String(all[id].password) === pass) {
-                    found = {...all[id], id: id}; break; 
+                    found = {...all[id], id: id}; // Simpan ID unik Firebase
+                    break; 
                 }
             }
-            if(found) { localStorage.setItem('drv_active', JSON.stringify(found)); location.reload(); } 
-            else { alert("Invalid Credentials."); }
+            
+            if(found) { 
+                localStorage.setItem('drv_active', JSON.stringify(found)); 
+                window.location.reload(); 
+            } else { 
+                alert("Invalid Credentials."); 
+            }
         }
 
+        // MAIN INITIALIZATION
         if(currentDriver) {
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('dashArea').style.display = 'block';
             
-            // 1. Monitor Driver Personal Info & Status
+            // 1. Listen to Driver Info & Status
             db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
                 const d = snap.val();
                 if(!d) return;
@@ -298,38 +290,14 @@
                 }
             });
 
-            // 2. Monitor Instant Requests
+            // 2. Listen to Instant Requests (REAL-TIME POPUP)
             db.ref('open_requests').on('value', (snap) => {
                 renderInstantRequests(snap);
             });
 
-            // 3. Monitor Pre-Bookings
+            // 3. Listen to Job Board
             db.ref('bookings').on('value', (snap) => {
-                let boardHtml = ""; let scheduleHtml = "";
-                snap.forEach(child => {
-                    const b = child.val();
-                    if(b.status === "PENDING") {
-                        boardHtml += `
-                        <div class="booking-card">
-                            <div style="font-weight:600; margin-bottom:4px; font-size:1rem;">${b.student_name}</div>
-                            <div style="font-size:0.85rem; color:var(--slate); margin-bottom:4px;">Schedule: ${b.date} • ${b.time}</div>
-                            <div style="font-size:0.85rem; margin-bottom:12px;"><span style="color:var(--slate);">Destination:</span> ${b.dest}</div>
-                            <button onclick="acceptBooking('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem; margin:0;">Accept Job</button>
-                        </div>`;
-                    }
-                    if(b.status === "ACCEPTED" && b.driver_id === currentDriver.id) {
-                        scheduleHtml += `
-                        <div class="schedule-card">
-                            <div style="font-weight:600; margin-bottom:4px; font-size:1rem;">Passenger: ${b.student_name}</div>
-                            <div style="font-size:0.85rem; color:var(--slate); margin-bottom:4px;">Schedule: ${b.date} • ${b.time}</div>
-                            <div style="font-size:0.85rem; margin-bottom:15px;"><span style="color:var(--slate);">Destination:</span> ${b.dest}</div>
-                            <button onclick="openBookingChat('${child.key}', '${b.student_name}')" class="btn" style="background:#334155; padding:10px; font-size:0.85rem; margin:0;">Message Passenger</button>
-                            <button onclick="cancelBooking('${child.key}')" style="margin-top:12px; color:var(--red); background:none; border:none; font-size:0.8rem; cursor:pointer; width:100%; font-weight:500;">Cancel Booking</button>
-                        </div>`;
-                    }
-                });
-                document.getElementById('bookingList').innerHTML = boardHtml || "No available jobs at the moment.";
-                document.getElementById('myScheduleList').innerHTML = scheduleHtml || "No confirmed trips.";
+                renderJobBoard(snap);
             });
         }
 
@@ -339,6 +307,7 @@
             
             snap.forEach(child => {
                 const req = child.val();
+                // Show order if Driver is ONLINE and status is SEARCHING
                 if(req.status === 'SEARCHING' && currentDriver.status === 'ON') {
                     instantHtml += `
                     <div class="instant-card">
@@ -348,45 +317,76 @@
                         <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem; margin:0;">Accept Request</button>
                     </div>`;
                 }
-                if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED' || req.status === 'COMPLETED')) {
+                // Check if driver has an active trip
+                if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED')) {
                     myTripFound = true;
                     activeInstantId = child.key;
                     showActiveRide(req);
                 }
             });
 
-            document.getElementById('instantList').innerHTML = (currentDriver.status === 'ON') ? (instantHtml || "Waiting for requests in your area...") : "System is offline. Go online to view requests.";
+            const listDiv = document.getElementById('instantList');
+            if(currentDriver.status === 'ON') {
+                listDiv.innerHTML = instantHtml || "Waiting for requests...";
+            } else if(currentDriver.status === 'BUSY') {
+                listDiv.innerHTML = "You are currently in a trip.";
+            } else {
+                listDiv.innerHTML = "System is offline. Go online to see requests.";
+            }
             
-            if(!myTripFound && currentDriver.status === 'BUSY') {
-                resetToMenu();
-            } else if (!myTripFound) {
+            if(!myTripFound) {
                 document.getElementById('activeRideSection').style.display = 'none';
                 document.getElementById('instantRequestsArea').style.display = 'block';
                 activeInstantId = null;
+                // If stuck in BUSY but no trip found, reset to ON
+                if(currentDriver.status === 'BUSY') {
+                    db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+                }
             }
         }
 
-        async function toggleStatus() {
-            if (currentDriver.status === 'BUSY') { completeTrip(); return; }
-            
-            let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
-            
-            await db.ref('drivers/' + currentDriver.id).update({ status: next });
-            currentDriver.status = next;
-            
-            const snap = await db.ref('open_requests').get();
-            renderInstantRequests(snap);
+        function renderJobBoard(snap) {
+            let boardHtml = ""; let scheduleHtml = "";
+            snap.forEach(child => {
+                const b = child.val();
+                if(b.status === "PENDING") {
+                    boardHtml += `<div class="booking-card">
+                        <div style="font-weight:600;">${b.student_name}</div>
+                        <div style="font-size:0.85rem; color:var(--slate);">${b.date} • ${b.time}</div>
+                        <div style="font-size:0.85rem; margin-bottom:10px;">To: ${b.dest}</div>
+                        <button onclick="acceptBooking('${child.key}')" class="btn" style="padding:8px; background:var(--blue); font-size:0.8rem; margin:0;">Accept Job</button>
+                    </div>`;
+                }
+                if(b.status === "ACCEPTED" && b.driver_id === currentDriver.id) {
+                    scheduleHtml += `<div class="schedule-card">
+                        <div style="font-weight:600;">Passenger: ${b.student_name}</div>
+                        <div style="font-size:0.85rem; color:var(--slate);">${b.date} • ${b.time}</div>
+                        <button onclick="openBookingChat('${child.key}', '${b.student_name}')" class="btn" style="background:#334155; padding:8px; font-size:0.8rem;">Message</button>
+                        <button onclick="cancelBooking('${child.key}')" style="margin-top:10px; color:var(--red); background:none; border:none; width:100%; cursor:pointer;">Cancel</button>
+                    </div>`;
+                }
+            });
+            document.getElementById('bookingList').innerHTML = boardHtml || "No available jobs.";
+            document.getElementById('myScheduleList').innerHTML = scheduleHtml || "No confirmed trips.";
         }
 
-        function resetToMenu() {
-            db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
-            currentDriver.status = 'ON';
-            document.getElementById('activeRideSection').style.display = 'none';
-            document.getElementById('instantRequestsArea').style.display = 'block';
-            activeInstantId = null;
+        async function toggleStatus() {
+            if (currentDriver.status === 'BUSY') { 
+                if(confirm("Complete this trip?")) {
+                    await db.ref('open_requests/' + activeInstantId).update({ status: 'COMPLETED' });
+                    await db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+                }
+                return; 
+            }
+            let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
+            await db.ref('drivers/' + currentDriver.id).update({ status: next });
         }
 
         async function acceptInstant(id) {
+            // Re-check status to prevent double-accept
+            const check = await db.ref('open_requests/' + id).get();
+            if(check.val().status !== 'SEARCHING') return alert("Already taken!");
+
             await db.ref('open_requests/' + id).update({
                 status: 'ACCEPTED',
                 driver_id: currentDriver.id,
@@ -395,28 +395,17 @@
                 driver_plate: currentDriver.plate
             });
             await db.ref('drivers/' + currentDriver.id).update({ status: 'BUSY' });
-            currentDriver.status = 'BUSY';
         }
 
         function showActiveRide(data) {
             document.getElementById('activeRideSection').style.display = 'block';
             document.getElementById('instantRequestsArea').style.display = 'none';
-            
             document.getElementById('rideInfo').innerHTML = `
-                <div style="color:var(--slate); font-size:0.8rem; text-transform:uppercase; font-weight:600; margin-bottom:8px;">Current Passenger</div>
-                <div style="font-weight:600; font-size:1.1rem; margin-bottom:8px;">${data.student_name}</div>
-                <div style="font-size:0.9rem; color:var(--slate); line-height:1.5;">
-                    <span style="color:white;">From:</span> ${data.pickup}<br>
-                    <span style="color:white;">To:</span> ${data.destination}
-                </div>
-            `;
+                <div style="font-weight:600; font-size:1.1rem;">${data.student_name}</div>
+                <div style="font-size:0.9rem; color:var(--slate);">
+                    From: ${data.pickup}<br>To: ${data.destination}
+                </div>`;
             loadChats(activeInstantId, 'chatBox');
-        }
-
-        async function completeTrip() {
-            if(confirm("Confirm trip completion?")) {
-                await db.ref('open_requests/' + activeInstantId).update({ status: 'COMPLETED' });
-            }
         }
 
         async function sendChat(type) {
@@ -433,6 +422,7 @@
         }
 
         function loadChats(id, elementId) {
+            db.ref('chats/' + id).off(); // clear old listeners
             db.ref('chats/' + id).on('value', (snap) => {
                 const box = document.getElementById(elementId);
                 let html = "";
@@ -440,7 +430,8 @@
                     const m = c.val();
                     html += `<div class="msg ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>`;
                 });
-                box.innerHTML = html; box.scrollTop = box.scrollHeight;
+                box.innerHTML = html; 
+                box.scrollTop = box.scrollHeight;
             });
         }
 
@@ -470,7 +461,7 @@
         }
 
         async function cancelBooking(key) {
-            if(confirm("Are you sure you want to cancel this booking?")) {
+            if(confirm("Cancel this booking?")) {
                 await db.ref('bookings/' + key).update({ status: 'PENDING', driver_name: null, driver_id: null });
             }
         }
@@ -482,7 +473,11 @@
             document.getElementById('btnBoard').className = t === 'board' ? 'tab-btn active' : 'tab-btn';
         }
 
-        function logout() { localStorage.clear(); location.reload(); }
+        function logout() { 
+            if(currentDriver) db.ref('drivers/' + currentDriver.id).update({ status: 'OFF' });
+            localStorage.clear(); 
+            location.reload(); 
+        }
     </script>
 </body>
 </html>
