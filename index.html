@@ -32,7 +32,6 @@
         .booking-card { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--amber); margin-bottom: 10px; }
         .schedule-card { background: rgba(34, 197, 94, 0.1); padding: 15px; border-radius: 12px; margin-top: 10px; border-left: 4px solid var(--green); margin-bottom: 10px; }
         
-        /* Floating Chat for Booking */
         #bookingChatOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:100; display:none; flex-direction:column; padding:20px; box-sizing:border-box; }
     </style>
 </head>
@@ -105,7 +104,7 @@
         
         let currentDriver = JSON.parse(localStorage.getItem('drv_active'));
         let activeInstantId = null; 
-        let activeBookingId = null; // Track booking chat
+        let activeBookingId = null; 
 
         async function login() {
             const user = document.getElementById('uName').value.trim();
@@ -127,7 +126,6 @@
             document.getElementById('loginArea').style.display = 'none';
             document.getElementById('dashArea').style.display = 'block';
             
-            // Sync Driver Status & Profile
             db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
                 const d = snap.val();
                 if(!d) return;
@@ -151,15 +149,15 @@
                 }
             });
 
-            // REAL-TIME: Monitoring Requests
+            // FIXED: Real-time Listener with automatic filter for Online/Offline
             db.ref('open_requests').on('value', (snap) => {
                 let instantHtml = "";
                 let myTripFound = false;
+                const isOnline = (currentDriver.status === 'ON');
                 
                 snap.forEach(child => {
                     const req = child.val();
-                    // Show only if driver is ON
-                    if(req.status === 'SEARCHING' && currentDriver.status === 'ON') {
+                    if(req.status === 'SEARCHING' && isOnline) {
                         instantHtml += `
                         <div class="booking-card" style="border-left-color: var(--blue);">
                             <b>👤 ${req.student_name} (${req.pax} Pax)</b><br>
@@ -168,7 +166,6 @@
                             <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem;">ACCEPT NOW</button>
                         </div>`;
                     }
-                    // Handle Active Trip
                     if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED' || req.status === 'COMPLETED')) {
                         myTripFound = true;
                         activeInstantId = child.key;
@@ -176,9 +173,8 @@
                     }
                 });
 
-                document.getElementById('instantList').innerHTML = instantHtml || (currentDriver.status === 'ON' ? "Waiting for requests..." : "Go online to see requests.");
+                document.getElementById('instantList').innerHTML = isOnline ? (instantHtml || "Waiting for requests...") : "Go online to see requests.";
                 
-                // CRITICAL FIX: If trip removed by student (null) or finished
                 if(!myTripFound && currentDriver.status === 'BUSY') {
                     resetToMenu();
                 } else if (!myTripFound) {
@@ -188,7 +184,6 @@
                 }
             });
 
-            // Monitor Pre-Bookings
             db.ref('bookings').on('value', (snap) => {
                 let boardHtml = ""; let scheduleHtml = "";
                 snap.forEach(child => {
@@ -243,21 +238,14 @@
         async function completeTrip() {
             if(confirm("Finish trip? Student will be asked to rate.")) {
                 await db.ref('open_requests/' + activeInstantId).update({ status: 'COMPLETED' });
-                // Note: resetToMenu() will be triggered by the listener automatically
             }
         }
 
-        // UNIFIED CHAT LOGIC
         async function sendChat(type) {
             const input = document.getElementById(type === 'instant' ? 'chatInput' : 'bookChatInput');
             const targetId = type === 'instant' ? activeInstantId : activeBookingId;
             if(!input.value.trim() || !targetId) return;
-            
-            await db.ref('chats/' + targetId).push({
-                sender: 'driver',
-                text: input.value,
-                time: Date.now()
-            });
+            await db.ref('chats/' + targetId).push({ sender: 'driver', text: input.value, time: Date.now() });
             input.value = "";
         }
 
@@ -273,7 +261,6 @@
             });
         }
 
-        // BOOKING CHAT OVERLAY LOGIC
         function openBookingChat(id, name) {
             activeBookingId = id;
             document.getElementById('bookChatHeader').innerText = "Chat with " + name;
