@@ -10,13 +10,19 @@
         :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; --amber: #fbbc04; --red: #ef4444; --green: #22c55e; --slate: #94a3b8; --white: #ffffff; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--white); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 450px; }
-        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; position: relative; }
+        
+        /* Interface Login Kau */
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #334155; }
         .input-field { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
         .btn { width: 100%; padding: 14px; background: var(--blue); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
-        .status-bar { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.05); }
-        .badge { padding: 5px 10px; border-radius: 5px; font-size: 0.8rem; font-weight: bold; }
-        .online { background: var(--green); color: white; }
-        .offline { background: var(--red); color: white; }
+        
+        /* Status UI */
+        .status-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 12px; width: 100%; box-sizing: border-box;}
+        .badge { padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
+        .online { background: var(--green); }
+        .offline { background: var(--red); }
+
+        /* Chat Panel */
         #chatPanel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 5000; display: none; flex-direction: column; }
         .bubble { padding: 10px 15px; border-radius: 15px; max-width: 75%; margin: 5px 0; }
         .bubble.me { align-self: flex-end; background: var(--blue); }
@@ -29,10 +35,10 @@
         <div id="loginArea">
             <h1 style="text-align: center;">🚕 SeGo Driver</h1>
             <div class="card">
-                <input type="text" id="drvID" class="input-field" placeholder="Driver Student ID">
+                <input type="text" id="drvID" class="input-field" placeholder="Student ID (Driver)">
                 <input type="text" id="drvName" class="input-field" placeholder="Full Name">
-                <input type="text" id="drvCar" class="input-field" placeholder="Car Model (e.g. Myvi)">
-                <input type="text" id="drvPlate" class="input-field" placeholder="Plate Number">
+                <input type="text" id="drvCar" class="input-field" placeholder="Car Model (e.g. Axia)">
+                <input type="text" id="drvPlate" class="input-field" placeholder="Plate Number (e.g. ABC 1234)">
                 <button class="btn" onclick="login()">Start Driving</button>
             </div>
         </div>
@@ -45,8 +51,10 @@
             
             <button id="toggleBtn" class="btn" style="background: var(--green); margin-bottom: 20px;" onclick="toggleStatus()">GO ONLINE</button>
 
-            <h3 id="listTitle">Available Requests</h3>
-            <div id="requestList">Wait for incoming requests...</div>
+            <div id="requestListArea">
+                <h3 id="listTitle">Available Requests</h3>
+                <div id="requestList">Waiting for incoming requests...</div>
+            </div>
 
             <div id="activeTripArea" style="display:none;"></div>
             
@@ -66,7 +74,12 @@
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg", databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "carpool-uitm" };
+        // Firebase Config (Guna kau punya)
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg", 
+            databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app", 
+            projectId: "carpool-uitm" 
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -79,11 +92,12 @@
             const name = document.getElementById('drvName').value.trim();
             const car = document.getElementById('drvCar').value.trim();
             const plate = document.getElementById('drvPlate').value.trim();
-            if(!id || !name || !car || !plate) return alert("Isi semua info!");
+            if(!id || !name || !car || !plate) return alert("Please fill all details!");
             currentUser = { id, name, car, plate };
             localStorage.setItem('sego_driver', JSON.stringify(currentUser));
             location.reload();
         }
+
         function logout() { 
             if(currentUser) db.ref('drivers/' + currentUser.id).remove();
             localStorage.clear(); 
@@ -98,20 +112,21 @@
         }
 
         async function initDriver() {
-            // Monitor status driver sendiri
+            // 1. Monitor status online/offline driver
             db.ref('drivers/' + currentUser.id).on('value', snap => {
                 const data = snap.val();
-                if(data && data.status === "ON") {
+                if(data && (data.status === "ON" || data.status === "BUSY")) {
                     isOnline = true;
-                    updateUIStatus(true);
-                    listenForRequests();
+                    updateUIStatus(data.status);
+                    if(data.status === "ON") listenForRequests();
                 } else {
                     isOnline = false;
-                    updateUIStatus(false);
+                    updateUIStatus("OFFLINE");
+                    document.getElementById('requestList').innerHTML = "Go online to see requests.";
                 }
             });
 
-            // Monitor jika trip sedang berjalan (Sync dengan open_requests)
+            // 2. Monitor jika ada trip yang ACTIVE (ACCEPTED)
             db.ref('open_requests').on('value', snap => {
                 let foundActive = false;
                 snap.forEach(child => {
@@ -123,17 +138,16 @@
                 });
                 if(!foundActive) {
                     document.getElementById('activeTripArea').style.display = 'none';
-                    document.getElementById('requestList').style.display = 'block';
-                    document.getElementById('listTitle').style.display = 'block';
+                    document.getElementById('requestListArea').style.display = 'block';
                 }
             });
         }
 
-        function updateUIStatus(online) {
+        function updateUIStatus(status) {
             const label = document.getElementById('statusLabel');
             const btn = document.getElementById('toggleBtn');
-            if(online) {
-                label.innerText = "ONLINE"; label.className = "badge online";
+            if(status === "ON" || status === "BUSY") {
+                label.innerText = status; label.className = "badge online";
                 btn.innerText = "GO OFFLINE"; btn.style.background = "var(--red)";
             } else {
                 label.innerText = "OFFLINE"; label.className = "badge offline";
@@ -151,18 +165,19 @@
 
         function listenForRequests() {
             db.ref('open_requests').on('value', snap => {
-                if(!isOnline) return;
                 let html = "";
                 snap.forEach(child => {
                     const req = child.val();
                     if(req.status === 'SEARCHING') {
                         html += `
                         <div class="card">
-                            <div style="font-size:0.8rem; color:var(--amber)">NEW REQUEST</div>
-                            <b>${req.student_name}</b> (${req.pax} Pax)<br>
-                            <small>📍 From: ${req.pickup}</small><br>
-                            <small>🎯 To: ${req.destination}</small>
-                            <button class="btn" style="margin-top:10px; background:var(--green)" onclick="acceptRide('${child.key}')">ACCEPT RIDE</button>
+                            <div style="font-size:0.7rem; color:var(--amber); font-weight:bold;">NEW REQUEST [${req.pax} PAX]</div>
+                            <b style="font-size:1.1rem;">${req.student_name}</b><br>
+                            <div style="margin-top:8px; font-size:0.9rem;">
+                                📍 <b>From:</b> ${req.pickup}<br>
+                                🎯 <b>To:</b> ${req.destination}
+                            </div>
+                            <button class="btn" style="margin-top:12px; background:var(--green)" onclick="acceptRide('${child.key}')">ACCEPT RIDE</button>
                         </div>`;
                     }
                 });
@@ -178,38 +193,33 @@
                 driver_car: currentUser.car,
                 driver_plate: currentUser.plate
             });
-            // Bila dah accept, driver jadi BUSY dalam list driver
             await db.ref('drivers/' + currentUser.id).update({ status: 'BUSY' });
         }
 
         function showActiveTrip(reqId, data) {
             currentRideId = reqId;
-            document.getElementById('requestList').style.display = 'none';
-            document.getElementById('listTitle').style.display = 'none';
+            document.getElementById('requestListArea').style.display = 'none';
             const area = document.getElementById('activeTripArea');
             area.style.display = 'block';
             area.innerHTML = `
-                <div class="card" style="border-left:5px solid var(--amber)">
+                <div class="card" style="border-top:5px solid var(--amber)">
                     <h4>Ongoing Trip</h4>
                     <p>Passenger: <b>${data.student_name}</b></p>
-                    <p>${data.pickup} ➔ ${data.destination}</p>
+                    <p>Route: ${data.pickup} ➔ ${data.destination}</p>
                     <button class="btn" onclick="openChat('${reqId}', '${data.student_name}')">CHAT STUDENT</button>
                     <button class="btn" style="background:var(--amber); color:black; margin-top:10px;" onclick="finishRide('${reqId}')">FINISH RIDE</button>
                 </div>`;
         }
 
         async function finishRide(reqId) {
-            if(confirm("Tamatkan perjalanan ni?")) {
-                // 1. Update request status supaya student dapat rating modal
+            if(confirm("Finish this trip? Student will be asked for rating.")) {
+                // Inform student trip is done
                 await db.ref('open_requests/' + reqId).update({ status: 'COMPLETED' });
-                
-                // 2. Set driver status jadi "ON" balik supaya dia boleh dapat request baru
+                // Reset driver to ON
                 await db.ref('drivers/' + currentUser.id).update({ status: 'ON' });
-                
-                // 3. Clear chat
+                // Clean chat
                 await db.ref('chats/' + reqId).remove();
-                
-                alert("Trip Finished! You are now back online.");
+                alert("Trip Finished!");
             }
         }
 
