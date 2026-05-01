@@ -19,465 +19,516 @@
             --border: #334155;
             --white: #f8fafc;
         }
-        
-        body { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            background: var(--bg); 
-            color: var(--white); 
-            padding: 20px; 
-            display: flex; 
-            justify-content: center; 
-            margin: 0; 
-        }
-        
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--white); padding: 20px; display: flex; justify-content: center; margin: 0; }
         .container { width: 100%; max-width: 420px; margin-top: 10px; }
-        
-        .card { 
-            background: var(--card); 
-            padding: 24px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); 
-            border: 1px solid var(--border); 
-        }
-        
+        .card { background: var(--card); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid var(--border); }
         h1, h2, h3, h4 { margin-top: 0; font-weight: 600; letter-spacing: -0.5px; }
-        
-        input { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            border-radius: 6px; 
-            border: 1px solid var(--border); 
-            background: #0f172a; 
-            color: white; 
-            box-sizing: border-box; 
-            font-family: inherit;
-        }
-        
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px; border: 1px solid var(--border); background: #0f172a; color: white; box-sizing: border-box; font-family: inherit; }
         input:focus { outline: none; border-color: var(--blue); }
-        
-        .btn { 
-            width: 100%; 
-            padding: 14px; 
-            border: none; 
-            border-radius: 6px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            margin-top: 10px; 
-            transition: 0.2s; 
-            font-family: inherit;
-        }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px; transition: 0.2s; font-family: inherit; }
         .btn:active { transform: scale(0.98); }
-        
-        #statusBadge { 
-            padding: 6px 12px; 
-            border-radius: 4px; 
-            text-align: center; 
-            font-weight: 700; 
-            margin-bottom: 20px; 
-            text-transform: uppercase; 
-            font-size: 0.85rem;
-            letter-spacing: 1px;
-            display: inline-block;
-        }
+        #statusBadge { padding: 6px 12px; border-radius: 4px; text-align: center; font-weight: 700; margin-bottom: 20px; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 1px; display: inline-block; }
         .status-ON { background: rgba(22, 163, 74, 0.15); color: var(--green); border: 1px solid var(--green); }
         .status-OFF { background: rgba(220, 38, 38, 0.15); color: var(--red); border: 1px solid var(--red); }
         .status-BUSY { background: rgba(217, 119, 6, 0.15); color: var(--amber); border: 1px solid var(--amber); }
-        
-        #chatBox { 
-            background: #0f172a; 
-            height: 220px; 
-            overflow-y: auto; 
-            padding: 15px; 
-            border-radius: 8px; 
-            margin: 15px 0; 
-            border: 1px solid var(--border); 
-            display: flex; 
-            flex-direction: column; 
-            gap: 8px; 
-        }
+        #chatBox { background: #0f172a; height: 220px; overflow-y: auto; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
         .msg { padding: 10px 14px; border-radius: 8px; max-width: 80%; font-size: 0.9rem; line-height: 1.4; }
         .me { align-self: flex-end; background: var(--blue); color: white; }
         .them { align-self: flex-start; background: #334155; color: white; }
-
-        .tab-bar { 
-            display: flex; 
-            gap: 8px; 
-            margin-bottom: 20px; 
-            background: #1e293b; 
-            padding: 6px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border); 
-        }
-        .tab-btn { 
-            flex: 1; 
-            padding: 10px; 
-            background: transparent; 
-            border: none; 
-            color: var(--slate); 
-            cursor: pointer; 
-            border-radius: 6px; 
-            font-size: 0.9rem; 
-            font-weight: 500;
-            font-family: inherit;
-        }
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 20px; background: #1e293b; padding: 6px; border-radius: 8px; border: 1px solid var(--border); }
+        .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; color: var(--slate); cursor: pointer; border-radius: 6px; font-size: 0.9rem; font-weight: 500; font-family: inherit; }
         .tab-btn.active { background: var(--blue); color: white; font-weight: 600; }
-        
-        .booking-card, .schedule-card, .instant-card { 
-            background: #0f172a; 
-            padding: 16px; 
-            border-radius: 8px; 
-            border: 1px solid var(--border);
-            margin-bottom: 12px; 
-        }
+        .booking-card, .schedule-card, .instant-card { background: #0f172a; padding: 16px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; }
         .booking-card { border-left: 4px solid var(--amber); }
         .schedule-card { border-left: 4px solid var(--green); }
         .instant-card { border-left: 4px solid var(--blue); }
-        
-        .section-title {
-            margin: 25px 0 10px 0; 
-            color: var(--slate); 
-            font-size: 0.85rem; 
-            text-transform: uppercase; 
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        #bookingChatOverlay { 
-            position: fixed; 
-            top:0; left:0; width:100%; height:100%; 
-            background: var(--bg); 
-            z-index: 1000; 
-            display: none; 
-            flex-direction: column; 
-            padding: 20px; 
-            box-sizing: border-box; 
-        }
+        .section-title { margin: 25px 0 10px 0; color: var(--slate); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        #bookingChatOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: var(--bg); z-index: 1000; display: none; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .call-modal { position: fixed; top:0; left:0; width:100%; height:100%; background: linear-gradient(180deg,#0f172a,#111827,#000); z-index:10000; display:none; justify-content:center; align-items:center; }
+        .call-screen { text-align:center; color:white; width:100%; padding:30px; }
+        .avatar-ring { width:140px; height:140px; border-radius:50%; border:3px solid rgba(255,255,255,0.08); display:flex; justify-content:center; align-items:center; margin:auto; animation:pulseRing 1.8s infinite; }
+        .avatar-circle { width:110px; height:110px; border-radius:50%; background:linear-gradient(135deg,#2563eb,#1d4ed8); display:flex; justify-content:center; align-items:center; font-size:42px; font-weight:700; color:white; }
+        #callDriverName { margin-top:25px; font-size:28px; font-weight:700; }
+        #callStatusText { color:#94a3b8; font-size:16px; margin-top:8px; }
+        .call-wave { margin-top:18px; }
+        .call-wave span { display:inline-block; width:8px; height:8px; margin:0 4px; border-radius:50%; background:#22c55e; animation:bounce 1.2s infinite; }
+        .call-wave span:nth-child(2){animation-delay:.2s;} .call-wave span:nth-child(3){animation-delay:.4s;}
+        .hangup-modern { margin-top:55px; width:78px; height:78px; border:none; border-radius:50%; background:#dc2626; color:white; font-size:32px; cursor:pointer; }
+        @keyframes pulseRing { 0%{transform:scale(1);} 50%{transform:scale(1.08);} 100%{transform:scale(1);} }
+        @keyframes bounce { 0%,80%,100%{transform:translateY(0);} 40%{transform:translateY(-10px);} }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="loginArea" class="card">
-            <h2 style="text-align:center; margin-bottom: 25px;">Driver Portal</h2>
-            <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Username</label>
-            <input type="text" id="uName" placeholder="Enter Username">
-            <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Password</label>
-            <input type="password" id="uPass" placeholder="Enter Password">
-            <button class="btn" style="background: var(--blue); color:white; margin-top: 15px;" onclick="login()">Sign In</button>
-        </div>
+<div class="container">
+    <div id="loginArea" class="card">
+        <h2 style="text-align:center; margin-bottom: 25px;">Driver Portal</h2>
+        <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Username</label>
+        <input type="text" id="uName" placeholder="Enter Username">
+        <label style="font-size: 0.8rem; color: var(--slate); font-weight: 500;">Password</label>
+        <input type="password" id="uPass" placeholder="Enter Password">
+        <button class="btn" style="background: var(--blue); color:white; margin-top: 15px;" onclick="login()">Sign In</button>
+    </div>
 
-        <div id="dashArea" style="display:none;">
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div>
-                        <h1 id="dispName" style="margin:0; font-size: 1.4rem;">-</h1>
-                        <p id="dispCar" style="color:var(--slate); font-size: 0.9rem; margin-top: 4px; margin-bottom:20px;">-</p>
-                    </div>
-                    <div id="statusBadge">OFFLINE</div>
+    <div id="dashArea" style="display:none;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h1 id="dispName" style="margin:0; font-size: 1.4rem;">-</h1>
+                    <p id="dispCar" style="color:var(--slate); font-size: 0.9rem; margin-top: 4px; margin-bottom:20px;">-</p>
                 </div>
-
-                <div class="tab-bar">
-                    <button class="tab-btn active" id="btnLive" onclick="showTab('live')">Live Shift</button>
-                    <button class="tab-btn" id="btnBoard" onclick="showTab('board')">Job Board</button>
-                </div>
-
-                <div id="sectionLive">
-                    <div id="activeRideSection" style="display:none; border-top: 1px solid var(--border); padding-top: 15px;">
-                        <div id="rideInfo" style="margin-bottom: 15px; background: #0f172a; border: 1px solid var(--border); padding: 15px; border-radius: 8px;"></div>
-                        <label style="color:var(--slate); font-weight:600; font-size:0.8rem; text-transform: uppercase;">Passenger Chat</label>
-                        <div id="chatBox"></div>
-                        <div style="display:flex; gap:8px; margin-bottom: 15px;">
-                            <input type="text" id="chatInput" placeholder="Message passenger..." style="margin:0;">
-                            <button class="btn" onclick="sendChat('instant')" style="background:var(--blue); color:white; margin:0; width: 80px;">Send</button>
-                        </div>
-                    </div>
-
-                    <div id="instantRequestsArea">
-                        <div class="section-title">Nearby Requests</div>
-                        <div id="instantList" style="font-size:0.9rem; margin-bottom:20px; color: var(--slate);">Loading...</div>
-                    </div>
-
-                    <button class="btn" id="mainBtn" onclick="toggleStatus()" style="margin-top: 10px;">GO ONLINE</button>
-                </div>
-
-                <div id="sectionBoard" style="display:none;">
-                    <div class="section-title">Confirmed Schedule</div>
-                    <div id="myScheduleList" style="font-size:0.9rem; color: var(--slate);">No confirmed trips.</div>
-                    <hr style="border:0; border-top:1px solid var(--border); margin:25px 0;">
-                    <div class="section-title">Available Bookings</div>
-                    <div id="bookingList" style="font-size:0.9rem; color: var(--slate);">Searching for jobs...</div>
-                </div>
-
-                <button onclick="logout()" style="background:none; border:none; color:var(--red); width:100%; margin-top:30px; cursor:pointer; font-weight: 500; font-size: 0.85rem; font-family: inherit;">Sign Out</button>
+                <div id="statusBadge">OFFLINE</div>
             </div>
+
+            <div class="tab-bar">
+                <button class="tab-btn active" id="btnLive" onclick="showTab('live')">Live Shift</button>
+                <button class="tab-btn" id="btnBoard" onclick="showTab('board')">Job Board</button>
+            </div>
+
+            <div id="sectionLive">
+                <div id="activeRideSection" style="display:none; border-top: 1px solid var(--border); padding-top: 15px;">
+                    <div id="rideInfo" style="margin-bottom: 15px; background: #0f172a; border: 1px solid var(--border); padding: 15px; border-radius: 8px;"></div>
+                    <label style="color:var(--slate); font-weight:600; font-size:0.8rem; text-transform: uppercase;">Passenger Chat</label>
+                    <div id="chatBox"></div>
+                    <div style="display:flex; gap:8px; margin-bottom: 15px;">
+                        <input type="text" id="chatInput" placeholder="Message passenger..." style="margin:0;">
+                        <button class="btn" onclick="sendChat('instant')" style="background:var(--blue); color:white; margin:0; width: 80px;">Send</button>
+                    </div>
+                </div>
+                <div id="instantRequestsArea">
+                    <div class="section-title">Nearby Requests</div>
+                    <div id="instantList" style="font-size:0.9rem; margin-bottom:20px; color: var(--slate);">Loading...</div>
+                </div>
+                <button class="btn" id="mainBtn" onclick="toggleStatus()" style="margin-top: 10px;">GO ONLINE</button>
+            </div>
+
+            <div id="sectionBoard" style="display:none;">
+                <div class="section-title">Confirmed Schedule</div>
+                <div id="myScheduleList" style="font-size:0.9rem; color: var(--slate);">No confirmed trips.</div>
+                <hr style="border:0; border-top:1px solid var(--border); margin:25px 0;">
+                <div class="section-title">Available Bookings</div>
+                <div id="bookingList" style="font-size:0.9rem; color: var(--slate);">Searching for jobs...</div>
+            </div>
+
+            <button onclick="logout()" style="background:none; border:none; color:var(--red); width:100%; margin-top:30px; cursor:pointer; font-weight: 500; font-size: 0.85rem; font-family: inherit;">Sign Out</button>
         </div>
     </div>
+</div>
 
-    <div id="bookingChatOverlay">
-        <h3 id="bookChatHeader" style="margin-top:0; padding-bottom: 15px; border-bottom: 1px solid var(--border);">Passenger Chat</h3>
-        <div id="bookingChatBox" style="flex:1; background:#0f172a; border-radius:8px; padding:15px; overflow-y:auto; border:1px solid var(--border); margin-bottom:15px; display:flex; flex-direction:column; gap:8px;"></div>
-        <div style="display:flex; gap:8px;">
-            <input type="text" id="bookChatInput" style="margin:0;" placeholder="Type your message...">
-            <button class="btn" style="width:80px; margin:0; background: var(--blue);" onclick="sendChat('booking')">Send</button>
-        </div>
-        <button class="btn" style="background:transparent; border: 1px solid var(--border); color: var(--slate); margin-top:15px;" onclick="closeBookingChat()">Close Chat</button>
+<div id="bookingChatOverlay">
+    <h3 id="bookChatHeader" style="margin-top:0; padding-bottom: 15px; border-bottom: 1px solid var(--border);">Passenger Chat</h3>
+    <div id="bookingChatBox" style="flex:1; background:#0f172a; border-radius:8px; padding:15px; overflow-y:auto; border:1px solid var(--border); margin-bottom:15px; display:flex; flex-direction:column; gap:8px;"></div>
+    <div style="display:flex; gap:8px;">
+        <input type="text" id="bookChatInput" style="margin:0;" placeholder="Type your message...">
+        <button class="btn" style="width:80px; margin:0; background: var(--blue);" onclick="sendChat('booking')">Send</button>
     </div>
+    <button class="btn" style="background:transparent; border: 1px solid var(--border); color: var(--slate); margin-top:15px;" onclick="closeBookingChat()">Close Chat</button>
+</div>
 
-    <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg", 
-            databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app", 
-            projectId: "carpool-uitm" 
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        
-        let currentDriver = JSON.parse(localStorage.getItem('drv_active'));
-        let activeInstantId = null; 
-        let activeBookingId = null;
+<div id="callModal" class="call-modal">
+    <div class="call-screen">
+        <div class="avatar-ring">
+            <div class="avatar-circle" id="callerAvatar">S</div>
+        </div>
+        <h2 id="callDriverName">Incoming Call</h2>
+        <p id="callStatusText">Student is calling...</p>
+        <audio id="remoteAudio" autoplay></audio>
+        <div class="call-wave">
+            <span></span><span></span><span></span>
+        </div>
+        <button class="hangup-modern" onclick="hangupCall()">✕</button>
+    </div>
+</div>
 
-        async function login() {
-            const user = document.getElementById('uName').value.trim();
-            const pass = document.getElementById('uPass').value.trim();
-            if(!user || !pass) return alert("Please fill in all fields.");
-            
-            const snap = await db.ref('drivers').get();
-            const all = snap.val();
-            let found = null;
-            
-            for(let id in all) {
-                if(String(all[id].username) === user && String(all[id].password) === pass) {
-                    found = {...all[id], id: id}; 
-                    break; 
+<script>
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCU3QzjiDpL4U3825XtERth6PFlJ1tsZtg", 
+        databaseURL: "https://carpool-uitm-default-rtdb.asia-southeast1.firebasedatabase.app", 
+        projectId: "carpool-uitm" 
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // =============================================
+    // ✅ FIX 1: Baca currentDriver dari localStorage dengan betul
+    // =============================================
+    let currentDriver = null;
+    const savedDriver = localStorage.getItem('drv_active');
+    if (savedDriver) {
+        try { currentDriver = JSON.parse(savedDriver); } catch(e) { currentDriver = null; }
+    }
+
+    let activeInstantId = null;
+    let activeBookingId = null;
+    let localStream = null;
+    let peerConnection = null;
+    let currentCallId = null;
+    let callListeners = [];
+
+    const rtcConfig = {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+    };
+
+    // =============================================
+    // ✅ FIX 2: ICE path seragam — driver guna "ice_driver", listen dari "ice_student"
+    //           (Sama dengan yang student.html hantar/terima)
+    // =============================================
+    function startListeningForCalls(driverId) {
+        console.log("🎧 Listening calls for driver:", driverId);
+
+        db.ref('calls')
+            .orderByChild('driver')
+            .equalTo(driverId)
+            .on('child_added', async (snap) => {
+                const call = snap.val();
+                const id = snap.key;
+                if (!call || call.status !== 'calling') return;
+
+                currentCallId = id;
+                console.log("📞 Incoming call:", id);
+
+                const modal = document.getElementById('callModal');
+                if (modal) modal.style.display = 'flex';
+                document.getElementById('callStatusText').innerText = "Incoming Call...";
+                document.getElementById('callDriverName').innerText = "Student Calling";
+
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    peerConnection = new RTCPeerConnection(rtcConfig);
+                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+                    // ✅ FIX: Driver hantar ICE ke "ice_driver" (student listen dari sini)
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            db.ref(`calls/${id}/ice_driver`).push(event.candidate.toJSON());
+                        }
+                    };
+
+                    peerConnection.ontrack = (event) => {
+                        const audio = document.getElementById('remoteAudio');
+                        if (audio) audio.srcObject = event.streams[0];
+                    };
+
+                    peerConnection.onconnectionstatechange = () => {
+                        if (['disconnected','failed','closed'].includes(peerConnection.connectionState)) {
+                            hangupCall();
+                        }
+                        if (peerConnection.connectionState === 'connected') {
+                            document.getElementById('callStatusText').innerText = "Connected";
+                        }
+                    };
+
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(call.offer));
+
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    await db.ref(`calls/${id}/answer`).set(answer);
+                    await db.ref(`calls/${id}`).update({ status: 'connected' });
+
+                    // ✅ FIX: Driver listen ICE dari "ice_student" (student hantar ke sini)
+                    db.ref(`calls/${id}/ice_student`).on('child_added', snap => {
+                        if (snap.val() && peerConnection) {
+                            peerConnection.addIceCandidate(new RTCIceCandidate(snap.val())).catch(console.warn);
+                        }
+                    });
+
+                    console.log("✅ Call answer sent");
+                } catch (err) {
+                    console.error("Call setup error:", err);
+                    hangupCall();
                 }
-            }
-            
-            if(found) { 
-                localStorage.setItem('drv_active', JSON.stringify(found)); 
-                window.location.reload(); 
-            } else { 
-                alert("Invalid Credentials."); 
+            });
+    }
+
+    function hangupCall() {
+        callListeners.forEach(({ ref, type }) => ref.off(type));
+        callListeners = [];
+
+        if (peerConnection) { peerConnection.close(); peerConnection = null; }
+        if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+
+        const modal = document.getElementById('callModal');
+        if (modal) modal.style.display = 'none';
+
+        const remoteAudio = document.getElementById('remoteAudio');
+        if (remoteAudio) remoteAudio.srcObject = null;
+
+        if (currentCallId) {
+            db.ref(`calls/${currentCallId}/status`).set('ended');
+            currentCallId = null;
+        }
+    }
+
+    // =============================================
+    // ✅ FIX 3: Login function — simpan dan reload dengan betul
+    // =============================================
+    async function login() {
+        const user = document.getElementById('uName').value.trim();
+        const pass = document.getElementById('uPass').value.trim();
+        if (!user || !pass) return alert("Please fill in all fields.");
+
+        const snap = await db.ref('drivers').get();
+        const all = snap.val();
+        let found = null;
+
+        for (let id in all) {
+            if (String(all[id].username) === user && String(all[id].password) === pass) {
+                found = { ...all[id], id: id };
+                break;
             }
         }
 
-        // MAIN INITIALIZATION
-        if(currentDriver) {
-            document.getElementById('loginArea').style.display = 'none';
-            document.getElementById('dashArea').style.display = 'block';
-            
-            // 1. Listen to Driver Info & Status (This updates currentDriver in real-time)
-            db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
-                const d = snap.val();
-                if(!d) return;
-                currentDriver = {...d, id: currentDriver.id}; // Sync local variable with DB
-                
-                document.getElementById('dispName').innerText = d.name;
-                document.getElementById('dispCar').innerText = d.car + " • " + d.plate;
-                
-                const badge = document.getElementById('statusBadge');
-                badge.innerText = d.status;
-                badge.className = "status-" + d.status;
-                
-                const btn = document.getElementById('mainBtn');
-                if(d.status === 'BUSY') {
-                    btn.innerText = "COMPLETE TRIP";
-                    btn.style.background = "var(--green)";
-                    btn.style.color = "white";
-                } else {
-                    btn.innerText = d.status === 'ON' ? "GO OFFLINE" : "GO ONLINE";
-                    btn.style.background = d.status === 'ON' ? "var(--red)" : "white";
-                    btn.style.color = d.status === 'ON' ? "white" : "var(--bg)";
-                }
-                
-                // Re-trigger request check whenever status changes
-                db.ref('open_requests').get().then(reqSnap => renderInstantRequests(reqSnap));
-            });
-
-            // 2. Listen to Instant Requests (REAL-TIME UPDATE)
-            db.ref('open_requests').on('value', (snap) => {
-                renderInstantRequests(snap);
-            });
-
-            // 3. Listen to Job Board
-            db.ref('bookings').on('value', (snap) => {
-                renderJobBoard(snap);
-            });
+        if (found) {
+            localStorage.setItem('drv_active', JSON.stringify(found));
+            window.location.reload();
+        } else {
+            alert("Invalid Credentials.");
         }
+    }
 
-        function renderInstantRequests(snap) {
-            let instantHtml = "";
-            let myTripFound = false;
-            
-            snap.forEach(child => {
-                const req = child.val();
-                // Logic updated: Check currentDriver.status directly
-                if(req.status === 'SEARCHING' && currentDriver.status === 'ON') {
-                    instantHtml += `
-                    <div class="instant-card">
-                        <div style="font-weight:600; margin-bottom:6px; font-size:1rem;">${req.student_name} <span style="font-size:0.8rem; color:var(--slate); font-weight:400;">(${req.pax} Pax)</span></div>
-                        <div style="font-size:0.85rem; margin-bottom:4px;"><span style="color:var(--slate);">Pickup:</span> ${req.pickup}</div>
-                        <div style="font-size:0.85rem; margin-bottom:12px;"><span style="color:var(--slate);">Dropoff:</span> ${req.destination}</div>
-                        <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem; margin:0;">Accept Request</button>
-                    </div>`;
-                }
-                if(req.driver_id === currentDriver.id && (req.status === 'ACCEPTED')) {
-                    myTripFound = true;
-                    activeInstantId = child.key;
-                    showActiveRide(req);
-                }
-            });
+    // =============================================
+    // ✅ FIX 4: Semua kod dashboard hanya jalan kalau currentDriver wujud
+    // =============================================
+    if (currentDriver) {
+        // Tunjuk dashboard, sembunyikan login
+        document.getElementById('loginArea').style.display = 'none';
+        document.getElementById('dashArea').style.display = 'block';
 
-            const listDiv = document.getElementById('instantList');
-            if(currentDriver.status === 'ON') {
-                listDiv.innerHTML = instantHtml || "Waiting for requests...";
-            } else if(currentDriver.status === 'BUSY') {
-                listDiv.innerHTML = "You are currently in a trip.";
+        // Mula dengar panggilan masuk
+        startListeningForCalls(currentDriver.id);
+
+        // 1. Listen Driver Info & Status
+        db.ref('drivers/' + currentDriver.id).on('value', (snap) => {
+            const d = snap.val();
+            if (!d) return;
+            currentDriver = { ...d, id: currentDriver.id };
+
+            document.getElementById('dispName').innerText = d.name;
+            document.getElementById('dispCar').innerText = d.car + " • " + d.plate;
+
+            const badge = document.getElementById('statusBadge');
+            badge.innerText = d.status;
+            badge.className = "status-" + d.status;
+
+            const btn = document.getElementById('mainBtn');
+            if (d.status === 'BUSY') {
+                btn.innerText = "COMPLETE TRIP";
+                btn.style.background = "var(--green)";
+                btn.style.color = "white";
             } else {
-                listDiv.innerHTML = "System is offline. Go online to see requests.";
+                btn.innerText = d.status === 'ON' ? "GO OFFLINE" : "GO ONLINE";
+                btn.style.background = d.status === 'ON' ? "var(--red)" : "white";
+                btn.style.color = d.status === 'ON' ? "white" : "var(--bg)";
             }
-            
-            if(!myTripFound) {
-                document.getElementById('activeRideSection').style.display = 'none';
-                document.getElementById('instantRequestsArea').style.display = 'block';
-                activeInstantId = null;
-                if(currentDriver.status === 'BUSY') {
-                    db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
-                }
-            }
-        }
+        });
 
-        function renderJobBoard(snap) {
-            let boardHtml = ""; let scheduleHtml = "";
-            snap.forEach(child => {
-                const b = child.val();
-                if(b.status === "PENDING") {
-                    boardHtml += `<div class="booking-card">
-                        <div style="font-weight:600;">${b.student_name}</div>
-                        <div style="font-size:0.85rem; color:var(--slate);">${b.date} • ${b.time}</div>
-                        <div style="font-size:0.85rem; margin-bottom:10px;">To: ${b.dest}</div>
-                        <button onclick="acceptBooking('${child.key}')" class="btn" style="padding:8px; background:var(--blue); font-size:0.8rem; margin:0;">Accept Job</button>
-                    </div>`;
-                }
-                if(b.status === "ACCEPTED" && b.driver_id === currentDriver.id) {
-                    scheduleHtml += `<div class="schedule-card">
-                        <div style="font-weight:600;">Passenger: ${b.student_name}</div>
-                        <div style="font-size:0.85rem; color:var(--slate);">${b.date} • ${b.time}</div>
-                        <button onclick="openBookingChat('${child.key}', '${b.student_name}')" class="btn" style="background:#334155; padding:8px; font-size:0.8rem;">Message</button>
-                        <button onclick="cancelBooking('${child.key}')" style="margin-top:10px; color:var(--red); background:none; border:none; width:100%; cursor:pointer;">Cancel</button>
-                    </div>`;
-                }
-            });
-            document.getElementById('bookingList').innerHTML = boardHtml || "No available jobs.";
-            document.getElementById('myScheduleList').innerHTML = scheduleHtml || "No confirmed trips.";
-        }
+        // 2. Listen Instant Requests
+        db.ref('open_requests').on('value', (snap) => {
+            renderInstantRequests(snap);
+        });
 
-        async function toggleStatus() {
-            if (currentDriver.status === 'BUSY') { 
-                if(confirm("Complete this trip?")) {
-                    await db.ref('open_requests/' + activeInstantId).update({ status: 'COMPLETED' });
-                    await db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
-                }
-                return; 
-            }
-            let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
-            await db.ref('drivers/' + currentDriver.id).update({ status: next });
-        }
+        // 3. Listen Job Board
+        db.ref('bookings').on('value', (snap) => {
+            renderJobBoard(snap);
+        });
+    }
 
-        async function acceptInstant(id) {
-            const check = await db.ref('open_requests/' + id).get();
-            if(check.val().status !== 'SEARCHING') return alert("Already taken!");
+    function renderInstantRequests(snap) {
+        let instantHtml = "";
+        let myTripFound = false;
 
-            await db.ref('open_requests/' + id).update({
-                status: 'ACCEPTED',
-                driver_id: currentDriver.id,
-                driver_name: currentDriver.name,
-                driver_car: currentDriver.car,
-                driver_plate: currentDriver.plate
-            });
-            await db.ref('drivers/' + currentDriver.id).update({ status: 'BUSY' });
-        }
-
-        function showActiveRide(data) {
-            document.getElementById('activeRideSection').style.display = 'block';
-            document.getElementById('instantRequestsArea').style.display = 'none';
-            document.getElementById('rideInfo').innerHTML = `
-                <div style="font-weight:600; font-size:1.1rem;">${data.student_name}</div>
-                <div style="font-size:0.9rem; color:var(--slate);">
-                    From: ${data.pickup}<br>To: ${data.destination}
+        snap.forEach(child => {
+            const req = child.val();
+            if (req.status === 'SEARCHING' && currentDriver.status === 'ON') {
+                instantHtml += `
+                <div class="instant-card">
+                    <div style="font-weight:600; margin-bottom:6px; font-size:1rem;">${req.student_name} <span style="font-size:0.8rem; color:var(--slate); font-weight:400;">(${req.pax} Pax)</span></div>
+                    <div style="font-size:0.85rem; margin-bottom:4px;"><span style="color:var(--slate);">Pickup:</span> ${req.pickup}</div>
+                    <div style="font-size:0.85rem; margin-bottom:12px;"><span style="color:var(--slate);">Dropoff:</span> ${req.destination}</div>
+                    <button onclick="acceptInstant('${child.key}')" class="btn" style="padding:10px; background:var(--blue); font-size:0.85rem; margin:0;">Accept Request</button>
                 </div>`;
-            loadChats(activeInstantId, 'chatBox');
+            }
+            if (req.driver_id === currentDriver.id && req.status === 'ACCEPTED') {
+                myTripFound = true;
+                activeInstantId = child.key;
+                showActiveRide(req);
+            }
+        });
+
+        const listDiv = document.getElementById('instantList');
+        if (currentDriver.status === 'ON') {
+            listDiv.innerHTML = instantHtml || "Waiting for requests...";
+        } else if (currentDriver.status === 'BUSY') {
+            listDiv.innerHTML = "You are currently in a trip.";
+        } else {
+            listDiv.innerHTML = "System is offline. Go online to see requests.";
         }
 
-        async function sendChat(type) {
-            const input = document.getElementById(type === 'instant' ? 'chatInput' : 'bookChatInput');
-            const targetId = type === 'instant' ? activeInstantId : activeBookingId;
-            if(!input.value.trim() || !targetId) return;
-            
-            await db.ref('chats/' + targetId).push({
-                sender: 'driver',
-                text: input.value,
-                time: Date.now()
-            });
-            input.value = "";
-        }
-
-        function loadChats(id, elementId) {
-            db.ref('chats/' + id).off(); 
-            db.ref('chats/' + id).on('value', (snap) => {
-                const box = document.getElementById(elementId);
-                let html = "";
-                snap.forEach(c => {
-                    const m = c.val();
-                    html += `<div class="msg ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>`;
-                });
-                box.innerHTML = html; 
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        function openBookingChat(id, name) {
-            activeBookingId = id;
-            document.getElementById('bookChatHeader').innerText = "Chat: " + name;
-            document.getElementById('bookingChatOverlay').style.display = 'flex';
-            loadChats(id, 'bookingChatBox');
-        }
-
-        function closeBookingChat() {
-            document.getElementById('bookingChatOverlay').style.display = 'none';
-            if(activeBookingId) db.ref('chats/' + activeBookingId).off();
-            activeBookingId = null;
-        }
-
-        async function acceptBooking(key) {
-            if(confirm("Accept this booking?")) {
-                await db.ref('bookings/' + key).update({ 
-                    status: 'ACCEPTED', 
-                    driver_name: currentDriver.name, 
-                    driver_id: currentDriver.id,
-                    driver_plate: currentDriver.plate,
-                    driver_car: currentDriver.car
-                });
+        if (!myTripFound) {
+            document.getElementById('activeRideSection').style.display = 'none';
+            document.getElementById('instantRequestsArea').style.display = 'block';
+            activeInstantId = null;
+            if (currentDriver.status === 'BUSY') {
+                db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
             }
         }
+    }
 
-        async function cancelBooking(key) {
-            if(confirm("Cancel this booking?")) {
-                await db.ref('bookings/' + key).update({ status: 'PENDING', driver_name: null, driver_id: null });
+    function renderJobBoard(snap) {
+        let boardHtml = ""; let scheduleHtml = "";
+        snap.forEach(child => {
+            const b = child.val();
+            if (b.status === "PENDING") {
+                boardHtml += `<div class="booking-card">
+                    <div style="font-weight:600;">${b.student_name}</div>
+                    <div style="font-size:0.85rem; color:var(--slate);">${b.date} • ${b.time}</div>
+                    <div style="font-size:0.85rem; margin-bottom:10px;">To: ${b.dest}</div>
+                    <button onclick="acceptBooking('${child.key}')" class="btn" style="padding:8px; background:var(--blue); font-size:0.8rem; margin:0;">Accept Job</button>
+                </div>`;
             }
-        }
+            if (b.status === "ACCEPTED" && b.driver_id === currentDriver.id) {
+                scheduleHtml += `<div class="schedule-card">
+                    <div style="font-weight:600;">Passenger: ${b.student_name}</div>
+                    <div style="font-size:0.85rem; color:var(--slate);">${b.date} • ${b.time}</div>
+                    <button onclick="openBookingChat('${child.key}', '${b.student_name}')" class="btn" style="background:#334155; padding:8px; font-size:0.8rem;">Message</button>
+                    <button onclick="cancelBooking('${child.key}')" style="margin-top:10px; color:var(--red); background:none; border:none; width:100%; cursor:pointer;">Cancel</button>
+                </div>`;
+            }
+        });
+        document.getElementById('bookingList').innerHTML = boardHtml || "No available jobs.";
+        document.getElementById('myScheduleList').innerHTML = scheduleHtml || "No confirmed trips.";
+    }
 
-        function showTab(t) {
-            document.getElementById('sectionLive').style.display = t === 'live' ? 'block' : 'none';
-            document.getElementById('sectionBoard').style.display = t === 'board' ? 'block' : 'none';
-            document.getElementById('btnLive').className = t === 'live' ? 'tab-btn active' : 'tab-btn';
-            document.getElementById('btnBoard').className = t === 'board' ? 'tab-btn active' : 'tab-btn';
+    async function toggleStatus() {
+        if (currentDriver.status === 'BUSY') {
+            if (confirm("Complete this trip?")) {
+                await db.ref('open_requests/' + activeInstantId).update({ status: 'COMPLETED' });
+                await db.ref('drivers/' + currentDriver.id).update({ status: 'ON' });
+            }
+            return;
         }
+        let next = currentDriver.status === 'ON' ? 'OFF' : 'ON';
+        await db.ref('drivers/' + currentDriver.id).update({ status: next });
+    }
 
-        function logout() { 
-            if(currentDriver) db.ref('drivers/' + currentDriver.id).update({ status: 'OFF' });
-            localStorage.clear(); 
-            location.reload(); 
+    async function acceptInstant(id) {
+        const check = await db.ref('open_requests/' + id).get();
+        if (check.val().status !== 'SEARCHING') return alert("Already taken!");
+        await db.ref('open_requests/' + id).update({
+            status: 'ACCEPTED',
+            driver_id: currentDriver.id,
+            driver_name: currentDriver.name,
+            driver_car: currentDriver.car,
+            driver_plate: currentDriver.plate,
+            driver_phone: currentDriver.phone
+        });
+        await db.ref('drivers/' + currentDriver.id).update({ status: 'BUSY' });
+    }
+
+    function showActiveRide(data) {
+        document.getElementById('activeRideSection').style.display = 'block';
+        document.getElementById('instantRequestsArea').style.display = 'none';
+        document.getElementById('rideInfo').innerHTML = `
+            <div style="font-weight:600; font-size:1.1rem;">${data.student_name}</div>
+            <div style="font-size:0.9rem; color:var(--slate);">
+                From: ${data.pickup}<br>To: ${data.destination}
+            </div>
+            <div id="driverPaymentInfo" style="margin-top:12px; ${data.payment_info ? '' : 'display:none;'} background: rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <small style="color:var(--slate);">Payment Info:</small><br>
+                <strong>${data.payment_info || ''}</strong>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+                <button class="btn" style="flex:1; background:var(--green);" onclick="arriveAtPickup()">ARRIVED</button>
+                <button class="btn" style="flex:1; background:#334155;" onclick="savePaymentInfo()">PUBLISH PAYMENT</button>
+            </div>
+            <input id="paymentInfoInput" type="text" placeholder="QR / A/C / payment note" value="${data.payment_info || ''}" style="width:100%; margin-top:12px; padding:10px; border-radius:8px; border:1px solid var(--border); background:#0f172a; color:white; box-sizing:border-box;">
+        `;
+        loadChats(activeInstantId, 'chatBox');
+    }
+
+    async function sendChat(type) {
+        const input = document.getElementById(type === 'instant' ? 'chatInput' : 'bookChatInput');
+        const targetId = type === 'instant' ? activeInstantId : activeBookingId;
+        if (!input.value.trim() || !targetId) return;
+        await db.ref('chats/' + targetId).push({ sender: 'driver', text: input.value, time: Date.now() });
+        input.value = "";
+    }
+
+    async function loadChats(id, elementId) {
+        const box = document.getElementById(elementId);
+        box.innerHTML = "";
+        db.ref('chats/' + id).off();
+        db.ref('chats/' + id).on('child_added', (snap) => {
+            const m = snap.val();
+            const msgHtml = m.type === 'image'
+                ? `<div class="msg ${m.sender === 'driver' ? 'me' : 'them'}"><div>${m.text || 'Image'}</div><img src="${m.url}" style="max-width:220px; border-radius:8px; margin-top:6px;"></div>`
+                : `<div class="msg ${m.sender === 'driver' ? 'me' : 'them'}">${m.text}</div>`;
+            box.innerHTML += msgHtml;
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    async function arriveAtPickup() {
+        if (!activeInstantId) return;
+        if (confirm('Mark as arrived at pickup?')) {
+            await db.ref('open_requests/' + activeInstantId).update({ status: 'ARRIVED', arrivedAt: Date.now() });
         }
-    </script>
+    }
+
+    async function savePaymentInfo() {
+        if (!activeInstantId) return;
+        const info = document.getElementById('paymentInfoInput')?.value.trim();
+        if (info === undefined) return;
+        await db.ref('open_requests/' + activeInstantId).update({ payment_info: info });
+        alert('Payment info saved.');
+    }
+
+    function openBookingChat(id, name) {
+        activeBookingId = id;
+        document.getElementById('bookChatHeader').innerText = "Chat: " + name;
+        document.getElementById('bookingChatOverlay').style.display = 'flex';
+        loadChats(id, 'bookingChatBox');
+    }
+
+    function closeBookingChat() {
+        document.getElementById('bookingChatOverlay').style.display = 'none';
+        if (activeBookingId) db.ref('chats/' + activeBookingId).off();
+        activeBookingId = null;
+    }
+
+    async function acceptBooking(key) {
+        if (confirm("Accept this booking?")) {
+            await db.ref('bookings/' + key).update({
+                status: 'ACCEPTED',
+                driver_name: currentDriver.name,
+                driver_id: currentDriver.id,
+                driver_plate: currentDriver.plate,
+                driver_car: currentDriver.car,
+                driver_phone: currentDriver.phone
+            });
+        }
+    }
+
+    async function cancelBooking(key) {
+        if (confirm("Cancel this booking?")) {
+            await db.ref('bookings/' + key).update({ status: 'PENDING', driver_name: null, driver_id: null });
+        }
+    }
+
+    function showTab(t) {
+        document.getElementById('sectionLive').style.display = t === 'live' ? 'block' : 'none';
+        document.getElementById('sectionBoard').style.display = t === 'board' ? 'block' : 'none';
+        document.getElementById('btnLive').className = t === 'live' ? 'tab-btn active' : 'tab-btn';
+        document.getElementById('btnBoard').className = t === 'board' ? 'tab-btn active' : 'tab-btn';
+    }
+
+    function logout() {
+        if (currentDriver) db.ref('drivers/' + currentDriver.id).update({ status: 'OFF' });
+        localStorage.clear();
+        location.reload();
+    }
+</script>
 </body>
 </html>
