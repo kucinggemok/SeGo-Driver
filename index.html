@@ -56,6 +56,7 @@
         .hangup-modern { margin-top:55px; width:78px; height:78px; border:none; border-radius:50%; background:#dc2626; color:white; font-size:32px; cursor:pointer; }
         @keyframes pulseRing { 0%{transform:scale(1);} 50%{transform:scale(1.08);} 100%{transform:scale(1);} }
         @keyframes bounce { 0%,80%,100%{transform:translateY(0);} 40%{transform:translateY(-10px);} }
+        .swipe-knob-grabbed { cursor: grabbing !important; }  
     </style>
 </head>
 <body>
@@ -131,11 +132,22 @@
         </div>
         <h2 id="callDriverName">Incoming Call</h2>
         <p id="callStatusText">Student is calling...</p>
-        <audio id="remoteAudio" autoplay></audio>
+       <audio id="remoteAudio" autoplay playsinline></audio>
         <div class="call-wave">
             <span></span><span></span><span></span>
         </div>
-        <button class="hangup-modern" onclick="hangupCall()">✕</button>
+
+        <!-- INCOMING: swipe bar -->
+        <div id="swipeBar" style="margin-top:55px; position:relative; width:280px; height:64px; background:rgba(255,255,255,0.08); border-radius:50px; margin-left:auto; margin-right:auto; overflow:hidden;">
+            <div style="position:absolute; width:100%; text-align:center; top:50%; transform:translateY(-50%); font-size:13px; color:rgba(255,255,255,0.4); pointer-events:none; user-select:none;">← Reject &nbsp;&nbsp;&nbsp;&nbsp; Answer →</div>
+            <div id="swipeKnob" style="position:absolute; top:7px; left:50%; transform:translateX(-50%); width:50px; height:50px; border-radius:50%; background:#22c55e; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:grab; touch-action:none;">📞</div>
+        </div>
+
+        <!-- CONNECTED: swipe to hangup -->
+        <div id="hangupBar" style="display:none; margin-top:55px; position:relative; width:280px; height:64px; background:rgba(255,255,255,0.08); border-radius:50px; margin-left:auto; margin-right:auto; overflow:hidden;">
+            <div style="position:absolute; width:100%; text-align:center; top:50%; transform:translateY(-50%); font-size:13px; color:rgba(255,255,255,0.4); pointer-events:none; user-select:none;">← Swipe to End Call</div>
+            <div id="hangupKnob" style="position:absolute; top:7px; right:7px; width:50px; height:50px; border-radius:50%; background:#dc2626; display:flex; align-items:center; justify-content:center; font-size:22px; cursor:grab; touch-action:none;">✕</div>
+        </div>
     </div>
 </div>
 
@@ -175,73 +187,28 @@
     // ✅ FIX 2: ICE path seragam — driver guna "ice_driver", listen dari "ice_student"
     //           (Sama dengan yang student.html hantar/terima)
     // =============================================
-    function startListeningForCalls(driverId) {
-        console.log("🎧 Listening calls for driver:", driverId);
+   function startListeningForCalls(driverId) {
+    console.log("🎧 Listening calls for driver:", driverId);
 
-        db.ref('calls')
-            .orderByChild('driver')
-            .equalTo(driverId)
-            .on('child_added', async (snap) => {
-                const call = snap.val();
-                const id = snap.key;
-                if (!call || call.status !== 'calling') return;
+    db.ref('calls')
+        .orderByChild('driver')
+        .equalTo(driverId)
+        .on('child_added', async (snap) => {
+            const call = snap.val();
+            const id = snap.key;
+            if (!call || call.status !== 'calling') return;
 
-                currentCallId = id;
-                console.log("📞 Incoming call:", id);
+            currentCallId = id;
+            console.log("📞 Incoming call:", id);
 
-                const modal = document.getElementById('callModal');
-                if (modal) modal.style.display = 'flex';
-                document.getElementById('callStatusText').innerText = "Incoming Call...";
-                document.getElementById('callDriverName').innerText = "Student Calling";
+            window._pendingCall = { call, id };
 
-                try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    peerConnection = new RTCPeerConnection(rtcConfig);
-                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-                    // ✅ FIX: Driver hantar ICE ke "ice_driver" (student listen dari sini)
-                    peerConnection.onicecandidate = (event) => {
-                        if (event.candidate) {
-                            db.ref(`calls/${id}/ice_driver`).push(event.candidate.toJSON());
-                        }
-                    };
-
-                    peerConnection.ontrack = (event) => {
-                        const audio = document.getElementById('remoteAudio');
-                        if (audio) audio.srcObject = event.streams[0];
-                    };
-
-                    peerConnection.onconnectionstatechange = () => {
-                        if (['disconnected','failed','closed'].includes(peerConnection.connectionState)) {
-                            hangupCall();
-                        }
-                        if (peerConnection.connectionState === 'connected') {
-                            document.getElementById('callStatusText').innerText = "Connected";
-                        }
-                    };
-
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(call.offer));
-
-                    const answer = await peerConnection.createAnswer();
-                    await peerConnection.setLocalDescription(answer);
-                    await db.ref(`calls/${id}/answer`).set(answer);
-                    await db.ref(`calls/${id}`).update({ status: 'connected' });
-
-                    // ✅ FIX: Driver listen ICE dari "ice_student" (student hantar ke sini)
-                    db.ref(`calls/${id}/ice_student`).on('child_added', snap => {
-                        if (snap.val() && peerConnection) {
-                            peerConnection.addIceCandidate(new RTCIceCandidate(snap.val())).catch(console.warn);
-                        }
-                    });
-
-                    console.log("✅ Call answer sent");
-                } catch (err) {
-                    console.error("Call setup error:", err);
-                    hangupCall();
-                }
-            });
-    }
-
+            const modal = document.getElementById('callModal');
+            if (modal) { modal.style.display = 'flex'; initIncomingSwipe(); }
+            document.getElementById('callStatusText').innerText = "Incoming Call...";
+            document.getElementById('callDriverName').innerText = "Student Calling";
+        });
+}
     function hangupCall() {
         callListeners.forEach(({ ref, type }) => ref.off(type));
         callListeners = [];
@@ -251,6 +218,10 @@
 
         const modal = document.getElementById('callModal');
         if (modal) modal.style.display = 'none';
+        document.getElementById('swipeBar').style.display = 'block';
+        document.getElementById('hangupBar').style.display = 'none';
+        const knob = document.getElementById('swipeKnob');
+        if (knob) { knob.style.left = '50%'; knob.style.transform = 'translateX(-50%)'; }
 
         const remoteAudio = document.getElementById('remoteAudio');
         if (remoteAudio) remoteAudio.srcObject = null;
@@ -322,6 +293,8 @@
                 btn.style.background = d.status === 'ON' ? "var(--red)" : "white";
                 btn.style.color = d.status === 'ON' ? "white" : "var(--bg)";
             }
+
+            db.ref('open_requests').once('value', snap => renderInstantRequests(snap)); // tambah ni
         });
 
         // 2. Listen Instant Requests
@@ -529,6 +502,115 @@
         localStorage.clear();
         location.reload();
     }
+
+    // ── Swipe to Answer / Reject ──────────────────────────
+function initSwipe(knobId, trackId, onRight, onLeft) {
+    const knob = document.getElementById(knobId);
+    const track = document.getElementById(trackId);
+    if (!knob || !track) return;
+
+    let startX = 0, currentX = 0, dragging = false;
+    const trackW = 280, knobW = 50, pad = 7;
+    const min = pad, max = trackW - knobW - pad;
+    const center = (trackW - knobW) / 2;
+    const threshold = 90;
+
+    function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+
+    function onStart(e) {
+        dragging = true; startX = getX(e); knob.classList.add('swipe-knob-grabbed');
+        e.preventDefault();
+    }
+    function onMove(e) {
+        if (!dragging) return;
+        const diff = getX(e) - startX;
+        currentX = Math.min(max, Math.max(min, center + diff));
+        knob.style.left = currentX + 'px';
+        knob.style.transform = 'none';
+    }
+    function onEnd() {
+        if (!dragging) return;
+        dragging = false; knob.classList.remove('swipe-knob-grabbed');
+        if (currentX >= max - threshold && onRight) { onRight(); return; }
+        if (currentX <= min + threshold && onLeft) { onLeft(); return; }
+        // snap balik tengah
+        knob.style.left = '50%';
+        knob.style.transform = 'translateX(-50%)';
+        currentX = center;
+    }
+
+    knob.addEventListener('mousedown', onStart);
+    knob.addEventListener('touchstart', onStart, { passive: false });
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchend', onEnd);
+}
+
+function showHangupBar() {
+    document.getElementById('swipeBar').style.display = 'none';
+    document.getElementById('hangupBar').style.display = 'block';
+    initSwipe('hangupKnob', 'hangupBar', null, () => hangupCall());
+}
+
+// Init swipe answer/reject bila callModal buka
+function initIncomingSwipe() {
+    const knob = document.getElementById('swipeKnob');
+    knob.style.left = '50%';
+    knob.style.transform = 'translateX(-50%)';
+    document.getElementById('swipeBar').style.display = 'block';
+    document.getElementById('hangupBar').style.display = 'none';
+
+    initSwipe('swipeKnob', 'swipeBar',
+        () => { answerCall(window._pendingCall.call, window._pendingCall.id); },
+        () => { hangupCall(); }
+    );
+}
+async function answerCall(call, id) {
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        peerConnection = new RTCPeerConnection(rtcConfig);
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) db.ref(`calls/${id}/ice_driver`).push(event.candidate.toJSON());
+        };
+        peerConnection.ontrack = (event) => {
+    const audio = document.getElementById('remoteAudio');
+    if (audio) {
+        audio.srcObject = event.streams[0];
+        audio.play().catch(e => console.warn('play error:', e));
+    }
+};
+        peerConnection.onconnectionstatechange = () => {
+            if (['disconnected','failed','closed'].includes(peerConnection.connectionState)) hangupCall();
+            if (peerConnection.connectionState === 'connected') {
+                document.getElementById('callStatusText').innerText = "Connected";
+                showHangupBar();
+            }
+        };
+
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(call.offer));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        await db.ref(`calls/${id}/answer`).set(answer);
+        await db.ref(`calls/${id}`).update({ status: 'connected' });
+
+        db.ref(`calls/${id}/status`).on('value', snap => {
+            if (snap.val() === 'ended') hangupCall();
+        });
+        db.ref(`calls/${id}/ice_student`).on('child_added', snap => {
+            if (snap.val() && peerConnection) {
+                peerConnection.addIceCandidate(new RTCIceCandidate(snap.val())).catch(console.warn);
+            }
+        });
+
+        console.log("✅ Call answered");
+    } catch (err) {
+        console.error("answerCall error:", err);
+        hangupCall();
+    }
+}
 </script>
 </body>
 </html>
